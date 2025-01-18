@@ -12,6 +12,7 @@ export default {
     },
     extend: {
       colors: {
+        border: "hsl(var(--border))",
         bunker: {
           bg: "#1A1F2C",
           accent: "#403E43",
