@@ -25,7 +25,7 @@ export const PlayerStatus = ({ name, health, maxHealth }: PlayerStatusProps) => 
         </div>
         <Progress 
           value={healthPercentage} 
-          className={`h-2 bg-bunker-bg [&>div]:${getHealthColor()}`}
+          className={`h-2 ${getHealthColor()}`}
         />
       </div>
     </Card>

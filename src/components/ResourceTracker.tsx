@@ -13,9 +13,9 @@ interface ResourceTrackerProps {
 
 export const ResourceTracker = ({ resources, onResourceChange }: ResourceTrackerProps) => {
   return (
-    <div className="grid grid-cols-3 gap-4 w-full max-w-3xl mx-auto p-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
       {resources.map((resource) => (
-        <Card key={resource.name} className="bg-bunker-accent p-4 text-bunker-text">
+        <Card key={resource.name} className="bg-bunker-bg p-4 text-bunker-text">
           <div className="flex flex-col items-center space-y-2">
             <span className="text-2xl">{resource.icon}</span>
             <h3 className="font-bold">{resource.name}</h3>
