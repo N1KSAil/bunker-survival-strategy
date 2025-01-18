@@ -1,5 +1,5 @@
-import { PlayerStatus } from "@/components/PlayerStatus";
-import { ResourceTracker } from "@/components/ResourceTracker";
+import PlayerStatus from "@/components/PlayerStatus";
+import ResourceTracker from "@/components/ResourceTracker";
 
 const Index = () => {
   return (
