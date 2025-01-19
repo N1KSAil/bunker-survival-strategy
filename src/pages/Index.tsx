@@ -3,6 +3,7 @@ import ResourceTracker from "@/components/ResourceTracker";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -15,6 +16,7 @@ import {
 // Типы для характеристик игрока
 type PlayerCharacteristics = {
   id: number;
+  name: string;
   profession: string;
   gender: string;
   health: string;
@@ -24,7 +26,7 @@ type PlayerCharacteristics = {
   specialAbility: string;
 };
 
-const INITIAL_PLAYERS: PlayerCharacteristics[] = [
+const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   {
     id: 1,
     profession: "Врач",
@@ -60,10 +62,20 @@ const INITIAL_PLAYERS: PlayerCharacteristics[] = [
 const Index = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [players, setPlayers] = useState<PlayerCharacteristics[]>([]);
+  const [playerName, setPlayerName] = useState("");
 
   const handleStartGame = () => {
+    if (!playerName.trim()) {
+      toast.error("Пожалуйста, введите имя персонажа");
+      return;
+    }
+
     setGameStarted(true);
-    setPlayers(INITIAL_PLAYERS);
+    const playersWithNames = INITIAL_PLAYERS.map((player, index) => ({
+      ...player,
+      name: index === 0 ? playerName : `Игрок ${player.id}`,
+    }));
+    setPlayers(playersWithNames);
     toast.success("Игра началась! Характеристики розданы.");
   };
 
@@ -89,6 +101,18 @@ const Index = () => {
                   <h3 className="font-medium mb-4">Текущий раунд</h3>
                   {!gameStarted ? (
                     <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="playerName" className="block text-sm font-medium">
+                          Имя вашего персонажа
+                        </label>
+                        <Input
+                          id="playerName"
+                          value={playerName}
+                          onChange={(e) => setPlayerName(e.target.value)}
+                          placeholder="Введите имя персонажа"
+                          className="bg-bunker-bg border-bunker-accent"
+                        />
+                      </div>
                       <p className="text-bunker-text/80">
                         Нажмите кнопку "Начать игру" чтобы раздать характеристики и начать игру
                       </p>
@@ -107,6 +131,7 @@ const Index = () => {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Игрок</TableHead>
+                              <TableHead>Имя</TableHead>
                               <TableHead>Профессия</TableHead>
                               <TableHead>Пол</TableHead>
                               <TableHead>Здоровье</TableHead>
@@ -120,6 +145,7 @@ const Index = () => {
                             {players.map((player) => (
                               <TableRow key={player.id}>
                                 <TableCell>Игрок {player.id}</TableCell>
+                                <TableCell>{player.name}</TableCell>
                                 <TableCell>{player.profession}</TableCell>
                                 <TableCell>???</TableCell>
                                 <TableCell>???</TableCell>
