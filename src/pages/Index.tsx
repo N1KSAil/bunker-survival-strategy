@@ -18,45 +18,107 @@ type PlayerCharacteristics = {
   id: number;
   name: string;
   profession: string;
+  professionExperience: string;
   gender: string;
   health: string;
   hobby: string;
+  hobbyExperience: string;
   phobia: string;
   bagItem: string;
   specialAbility: string;
+  additionalTraits: string;
+  onlineStatus: boolean;
+  age: number;
+  education: string;
+  maritalStatus: string;
 };
 
 const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   {
     id: 1,
     profession: "Врач",
+    professionExperience: "15 лет",
     gender: "Женский",
     health: "Здоров",
     hobby: "Садоводство",
+    hobbyExperience: "8 лет",
     phobia: "Клаустрофобия",
     bagItem: "Аптечка",
-    specialAbility: "Лечение",
+    specialAbility: "Может лечить тяжелые травмы и болезни без медикаментов",
+    additionalTraits: "Имеет знания о лекарственных растениях",
+    onlineStatus: true,
+    age: 42,
+    education: "Высшее медицинское",
+    maritalStatus: "Замужем",
   },
   {
     id: 2,
     profession: "Инженер",
+    professionExperience: "7 лет",
     gender: "Мужской",
     health: "Астма",
     hobby: "Электроника",
+    hobbyExperience: "12 лет",
     phobia: "Акрофобия",
     bagItem: "Набор инструментов",
-    specialAbility: "Ремонт",
+    specialAbility: "Может создавать и ремонтировать сложные механизмы из простых материалов",
+    additionalTraits: "Разбирается в альтернативных источниках энергии",
+    onlineStatus: false,
+    age: 35,
+    education: "Высшее техническое",
+    maritalStatus: "Холост",
   },
   {
     id: 3,
     profession: "Военный",
+    professionExperience: "20 лет",
     gender: "Мужской",
     health: "Здоров",
     hobby: "Стрельба",
+    hobbyExperience: "25 лет",
     phobia: "Агорафобия",
     bagItem: "Оружие",
-    specialAbility: "Защита",
+    specialAbility: "Может обучать других боевым навыкам и тактике выживания",
+    additionalTraits: "Имеет опыт выживания в экстремальных условиях",
+    onlineStatus: true,
+    age: 45,
+    education: "Военная академия",
+    maritalStatus: "Разведен",
   },
+  {
+    id: 4,
+    profession: "Биолог",
+    professionExperience: "10 лет",
+    gender: "Женский",
+    health: "Аллергия",
+    hobby: "Микология",
+    hobbyExperience: "5 лет",
+    phobia: "Айхмофобия",
+    bagItem: "Микроскоп",
+    specialAbility: "Может определять съедобные растения и грибы, создавать лекарства",
+    additionalTraits: "Знает как очищать воду природными методами",
+    onlineStatus: true,
+    age: 33,
+    education: "Кандидат наук",
+    maritalStatus: "Не замужем",
+  },
+  {
+    id: 5,
+    profession: "Психолог",
+    professionExperience: "12 лет",
+    gender: "Женский",
+    health: "Здоров",
+    hobby: "Медитация",
+    hobbyExperience: "15 лет",
+    phobia: "Никтофобия",
+    bagItem: "Книги по психологии",
+    specialAbility: "Может предотвращать конфликты и лечить психические травмы",
+    additionalTraits: "Владеет техниками снятия стресса",
+    onlineStatus: false,
+    age: 38,
+    education: "Высшее психологическое",
+    maritalStatus: "Вдова",
+  }
 ];
 
 const Index = () => {
@@ -126,19 +188,26 @@ const Index = () => {
                   ) : (
                     <div className="space-y-4">
                       <p>Игра началась! Раунд 1</p>
-                      <div className="rounded border border-bunker-accent overflow-hidden">
+                      <div className="rounded border border-bunker-accent overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>
                               <TableHead>Игрок</TableHead>
                               <TableHead>Имя</TableHead>
+                              <TableHead>Онлайн</TableHead>
                               <TableHead>Профессия</TableHead>
+                              <TableHead>Стаж</TableHead>
+                              <TableHead>Способность</TableHead>
+                              <TableHead>Возраст</TableHead>
                               <TableHead>Пол</TableHead>
                               <TableHead>Здоровье</TableHead>
                               <TableHead>Хобби</TableHead>
+                              <TableHead>Стаж хобби</TableHead>
+                              <TableHead>Образование</TableHead>
+                              <TableHead>Сем. положение</TableHead>
                               <TableHead>Фобия</TableHead>
                               <TableHead>Предмет</TableHead>
-                              <TableHead>Способность</TableHead>
+                              <TableHead>Доп. черты</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -146,7 +215,16 @@ const Index = () => {
                               <TableRow key={player.id}>
                                 <TableCell>Игрок {player.id}</TableCell>
                                 <TableCell>{player.name}</TableCell>
+                                <TableCell>
+                                  {player.onlineStatus ? "🟢" : "⚫"}
+                                </TableCell>
                                 <TableCell>{player.profession}</TableCell>
+                                <TableCell>{player.professionExperience}</TableCell>
+                                <TableCell>???</TableCell>
+                                <TableCell>???</TableCell>
+                                <TableCell>???</TableCell>
+                                <TableCell>???</TableCell>
+                                <TableCell>???</TableCell>
                                 <TableCell>???</TableCell>
                                 <TableCell>???</TableCell>
                                 <TableCell>???</TableCell>
