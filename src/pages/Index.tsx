@@ -30,7 +30,6 @@ type PlayerCharacteristics = {
   onlineStatus: boolean;
   age: number;
   education: string;
-  maritalStatus: string;
 };
 
 const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
@@ -49,7 +48,6 @@ const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
     onlineStatus: true,
     age: 42,
     education: "Высшее медицинское",
-    maritalStatus: "Замужем",
   },
   {
     id: 2,
@@ -66,7 +64,6 @@ const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
     onlineStatus: false,
     age: 35,
     education: "Высшее техническое",
-    maritalStatus: "Холост",
   },
   {
     id: 3,
@@ -83,7 +80,6 @@ const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
     onlineStatus: true,
     age: 45,
     education: "Военная академия",
-    maritalStatus: "Разведен",
   },
   {
     id: 4,
@@ -100,7 +96,6 @@ const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
     onlineStatus: true,
     age: 33,
     education: "Кандидат наук",
-    maritalStatus: "Не замужем",
   },
   {
     id: 5,
@@ -117,7 +112,6 @@ const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
     onlineStatus: false,
     age: 38,
     education: "Высшее психологическое",
-    maritalStatus: "Вдова",
   }
 ];
 
@@ -203,19 +197,14 @@ const Index = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Игрок</TableHead>
                         <TableHead>Имя</TableHead>
                         <TableHead>Онлайн</TableHead>
                         <TableHead>Профессия</TableHead>
-                        <TableHead>Стаж</TableHead>
-                        <TableHead>Способность</TableHead>
                         <TableHead>Возраст</TableHead>
                         <TableHead>Пол</TableHead>
                         <TableHead>Здоровье</TableHead>
                         <TableHead>Хобби</TableHead>
-                        <TableHead>Стаж хобби</TableHead>
                         <TableHead>Образование</TableHead>
-                        <TableHead>Сем. положение</TableHead>
                         <TableHead>Фобия</TableHead>
                         <TableHead>Предмет</TableHead>
                         <TableHead>Доп. черты</TableHead>
@@ -224,24 +213,26 @@ const Index = () => {
                     <TableBody>
                       {players.map((player) => (
                         <TableRow key={player.id}>
-                          <TableCell>Игрок {player.id}</TableCell>
                           <TableCell>{player.name}</TableCell>
                           <TableCell>
                             {player.onlineStatus ? "🟢" : "⚫"}
                           </TableCell>
-                          <TableCell>{player.profession}</TableCell>
-                          <TableCell>{player.professionExperience}</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
-                          <TableCell>???</TableCell>
+                          <TableCell className="group relative">
+                            {player.profession} ({player.professionExperience})
+                            <span className="cursor-help ml-1">❓
+                              <span className="invisible group-hover:visible absolute z-10 w-64 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
+                                {player.specialAbility}
+                              </span>
+                            </span>
+                          </TableCell>
+                          <TableCell>{player.age}</TableCell>
+                          <TableCell>{player.gender}</TableCell>
+                          <TableCell>{player.health}</TableCell>
+                          <TableCell>{player.hobby} ({player.hobbyExperience})</TableCell>
+                          <TableCell>{player.education}</TableCell>
+                          <TableCell>{player.phobia}</TableCell>
+                          <TableCell>{player.bagItem}</TableCell>
+                          <TableCell>{player.additionalTraits}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
