@@ -198,7 +198,6 @@ const Index = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Имя</TableHead>
-                        <TableHead>Онлайн</TableHead>
                         <TableHead>Профессия</TableHead>
                         <TableHead>Возраст</TableHead>
                         <TableHead>Пол</TableHead>
@@ -214,9 +213,6 @@ const Index = () => {
                       {players.map((player) => (
                         <TableRow key={player.id}>
                           <TableCell>{player.name}</TableCell>
-                          <TableCell>
-                            {player.onlineStatus ? "🟢" : "⚫"}
-                          </TableCell>
                           <TableCell className="group relative">
                             {player.profession} ({player.professionExperience})
                             <span className="cursor-help ml-1">❓
