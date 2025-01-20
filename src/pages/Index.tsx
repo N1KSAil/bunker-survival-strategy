@@ -1,36 +1,10 @@
 import PlayerStatus from "@/components/PlayerStatus";
 import ResourceTracker from "@/components/ResourceTracker";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-// Типы для характеристик игрока
-type PlayerCharacteristics = {
-  id: number;
-  name: string;
-  profession: string;
-  professionExperience: string;
-  gender: string;
-  health: string;
-  hobby: string;
-  hobbyExperience: string;
-  phobia: string;
-  bagItem: string;
-  specialAbility: string;
-  additionalTraits: string;
-  onlineStatus: boolean;
-  age: number;
-  education: string;
-};
+import GameTable from "@/components/GameTable";
+import StartScreen from "@/components/StartScreen";
+import { PlayerCharacteristics } from "@/types/game";
 
 const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   {
@@ -167,74 +141,13 @@ const Index = () => {
           <h2 className="text-xl font-semibold mb-4">Игровая зона</h2>
           <div className="space-y-4">
             {!gameStarted ? (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="playerName" className="block text-sm font-medium">
-                    Имя вашего персонажа
-                  </label>
-                  <Input
-                    id="playerName"
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder="Введите имя персонажа"
-                    className="bg-bunker-bg border-bunker-accent"
-                  />
-                </div>
-                <p className="text-bunker-text/80">
-                  Нажмите кнопку "Начать игру" чтобы раздать характеристики и начать игру
-                </p>
-                <Button 
-                  onClick={handleStartGame}
-                  className="w-full bg-bunker-success hover:bg-bunker-success/90"
-                >
-                  Начать игру
-                </Button>
-              </div>
+              <StartScreen
+                playerName={playerName}
+                onPlayerNameChange={setPlayerName}
+                onStartGame={handleStartGame}
+              />
             ) : (
-              <div className="space-y-4">
-                <p>Игра началась! Раунд 1</p>
-                <div className="rounded border border-bunker-accent overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Имя</TableHead>
-                        <TableHead>Профессия</TableHead>
-                        <TableHead>Возраст</TableHead>
-                        <TableHead>Пол</TableHead>
-                        <TableHead>Здоровье</TableHead>
-                        <TableHead>Хобби</TableHead>
-                        <TableHead>Образование</TableHead>
-                        <TableHead>Фобия</TableHead>
-                        <TableHead>Предмет</TableHead>
-                        <TableHead>Доп. черты</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {players.map((player) => (
-                        <TableRow key={player.id}>
-                          <TableCell>{player.name}</TableCell>
-                          <TableCell className="group relative">
-                            {player.profession} ({player.professionExperience})
-                            <span className="cursor-help ml-1">❓
-                              <span className="invisible group-hover:visible absolute z-10 w-64 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
-                                {player.specialAbility}
-                              </span>
-                            </span>
-                          </TableCell>
-                          <TableCell>{player.age}</TableCell>
-                          <TableCell>{player.gender}</TableCell>
-                          <TableCell>{player.health}</TableCell>
-                          <TableCell>{player.hobby} ({player.hobbyExperience})</TableCell>
-                          <TableCell>{player.education}</TableCell>
-                          <TableCell>{player.phobia}</TableCell>
-                          <TableCell>{player.bagItem}</TableCell>
-                          <TableCell>{player.additionalTraits}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+              <GameTable players={players} />
             )}
           </div>
         </div>
