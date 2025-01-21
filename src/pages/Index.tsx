@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import GameTable from "@/components/GameTable";
 import StartScreen from "@/components/StartScreen";
-import { PlayerCharacteristics } from "@/types/game";
+import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
 
 const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   {
@@ -93,20 +93,22 @@ const Index = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [players, setPlayers] = useState<PlayerCharacteristics[]>([]);
   const [playerName, setPlayerName] = useState("");
+  const [currentLobby, setCurrentLobby] = useState<LobbyCredentials | null>(null);
 
-  const handleStartGame = () => {
+  const handleStartGame = (lobbyCredentials: LobbyCredentials) => {
     if (!playerName.trim()) {
       toast.error("Пожалуйста, введите имя персонажа");
       return;
     }
 
     setGameStarted(true);
+    setCurrentLobby(lobbyCredentials);
     const playersWithNames = INITIAL_PLAYERS.map((player, index) => ({
       ...player,
       name: index === 0 ? playerName : `Игрок ${player.id}`,
     }));
     setPlayers(playersWithNames);
-    toast.success("Игра началась! Характеристики розданы.");
+    toast.success(`${lobbyCredentials.name} создано! Характеристики розданы.`);
   };
 
   return (
@@ -138,7 +140,9 @@ const Index = () => {
 
         {/* Level 4 - Game Zone */}
         <div className="w-full bg-bunker-accent rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-4">Игровая зона</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            {currentLobby ? `Лобби: ${currentLobby.name}` : "Игровая зона"}
+          </h2>
           <div className="space-y-4">
             {!gameStarted ? (
               <StartScreen

@@ -15,3 +15,8 @@ export type PlayerCharacteristics = {
   age: number;
   education: string;
 };
+
+export type LobbyCredentials = {
+  name: string;
+  password: string;
+};
