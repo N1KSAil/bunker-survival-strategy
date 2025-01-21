@@ -103,10 +103,22 @@ const Index = () => {
 
     setGameStarted(true);
     setCurrentLobby(lobbyCredentials);
-    const playersWithNames = INITIAL_PLAYERS.map((player, index) => ({
-      ...player,
-      name: index === 0 ? playerName : `Игрок ${player.id}`,
-    }));
+
+    // Находим первого бота (игрока с именем "Игрок X") и заменяем его на реального игрока
+    const playersWithNames = INITIAL_PLAYERS.map((player, index) => {
+      if (index === 0) {
+        // Первый игрок - это всегда текущий пользователь
+        return {
+          ...player,
+          name: playerName,
+        };
+      }
+      return {
+        ...player,
+        name: `Игрок ${player.id}`,
+      };
+    });
+
     setPlayers(playersWithNames);
     toast.success(`${lobbyCredentials.name} создано! Характеристики розданы.`);
   };
