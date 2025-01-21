@@ -227,7 +227,7 @@ const Index = () => {
                 onStartGame={handleStartGame}
               />
             ) : (
-              <GameTable players={players} />
+              <GameTable players={players} currentPlayerName={playerName} />
             )}
           </div>
         </div>

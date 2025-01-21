@@ -7,12 +7,89 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PlayerCharacteristics } from "@/types/game";
+import { Lock } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface GameTableProps {
   players: PlayerCharacteristics[];
+  currentPlayerName: string;
 }
 
-const GameTable = ({ players }: GameTableProps) => {
+const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
+  const [revealedCharacteristics, setRevealedCharacteristics] = useState<{
+    [key: string]: Set<string>;
+  }>({});
+
+  const handleRevealCharacteristic = (playerName: string, characteristic: string) => {
+    setRevealedCharacteristics((prev) => {
+      const newState = { ...prev };
+      if (!newState[characteristic]) {
+        newState[characteristic] = new Set();
+      }
+      newState[characteristic].add(playerName);
+      return newState;
+    });
+    toast.success(`Характеристика "${characteristic}" раскрыта для всех игроков`);
+  };
+
+  const renderCharacteristicCell = (
+    player: PlayerCharacteristics,
+    characteristic: keyof PlayerCharacteristics,
+    displayName: string
+  ) => {
+    const isCurrentPlayer = player.name === currentPlayerName;
+    const isRevealed = revealedCharacteristics[characteristic]?.has(player.name);
+
+    if (isCurrentPlayer) {
+      return (
+        <TableCell className="group relative">
+          {player[characteristic]}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="ml-2">
+                <Lock className="w-4 h-4 inline-block cursor-pointer" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Раскрыть характеристику?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Вы уверены, что хотите раскрыть характеристику "{displayName}" для всех игроков?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleRevealCharacteristic(player.name, characteristic)}
+                >
+                  Раскрыть
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </TableCell>
+      );
+    }
+
+    return (
+      <TableCell className="group relative">
+        {isRevealed ? player[characteristic] : "???"}
+      </TableCell>
+    );
+  };
+
   return (
     <div className="rounded border border-bunker-accent overflow-x-auto">
       <Table>
@@ -90,38 +167,15 @@ const GameTable = ({ players }: GameTableProps) => {
           {players.map((player) => (
             <TableRow key={player.id}>
               <TableCell>{player.name}</TableCell>
-              <TableCell className="group relative">
-                {player.profession} ({player.professionExperience})
-                <span className="cursor-help ml-1">❓
-                  <span className="invisible group-hover:visible absolute z-10 w-64 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
-                    {player.specialAbility}
-                  </span>
-                </span>
-              </TableCell>
-              <TableCell className="group relative">
-                {player.age}
-              </TableCell>
-              <TableCell className="group relative">
-                {player.gender}
-              </TableCell>
-              <TableCell className="group relative">
-                {player.health}
-              </TableCell>
-              <TableCell className="group relative">
-                {player.hobby} ({player.hobbyExperience})
-              </TableCell>
-              <TableCell className="group relative">
-                {player.education}
-              </TableCell>
-              <TableCell className="group relative">
-                {player.phobia}
-              </TableCell>
-              <TableCell className="group relative">
-                {player.bagItem}
-              </TableCell>
-              <TableCell className="group relative">
-                {player.additionalTraits}
-              </TableCell>
+              {renderCharacteristicCell(player, "profession", "Профессия")}
+              {renderCharacteristicCell(player, "age", "Возраст")}
+              {renderCharacteristicCell(player, "gender", "Пол")}
+              {renderCharacteristicCell(player, "health", "Здоровье")}
+              {renderCharacteristicCell(player, "hobby", "Хобби")}
+              {renderCharacteristicCell(player, "education", "Образование")}
+              {renderCharacteristicCell(player, "phobia", "Фобия")}
+              {renderCharacteristicCell(player, "bagItem", "Предмет")}
+              {renderCharacteristicCell(player, "additionalTraits", "Доп. черты")}
             </TableRow>
           ))}
         </TableBody>
