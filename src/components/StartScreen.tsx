@@ -7,7 +7,7 @@ import { toast } from "sonner";
 interface StartScreenProps {
   playerName: string;
   onPlayerNameChange: (name: string) => void;
-  onStartGame: (lobbyCredentials: LobbyCredentials) => void;
+  onStartGame: (lobbyCredentials: LobbyCredentials, isCreating: boolean) => void;
 }
 
 const StartScreen = ({ playerName, onPlayerNameChange, onStartGame }: StartScreenProps) => {
@@ -26,7 +26,7 @@ const StartScreen = ({ playerName, onPlayerNameChange, onStartGame }: StartScree
       return;
     }
 
-    onStartGame({ name: lobbyName, password: lobbyPassword });
+    onStartGame({ name: lobbyName, password: lobbyPassword }, isCreating);
     setIsCreating(false);
     setIsJoining(false);
   };

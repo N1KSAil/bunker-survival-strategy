@@ -136,7 +136,7 @@ const Index = () => {
     setPlayers(lobbyData.players);
   }
 
-  const handleStartGame = async (lobbyCredentials: LobbyCredentials) => {
+  const handleStartGame = async (lobbyCredentials: LobbyCredentials, isCreating: boolean) => {
     if (!playerName.trim()) {
       toast.error("Пожалуйста, введите имя персонажа");
       return;
