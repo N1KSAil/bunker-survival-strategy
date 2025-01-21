@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import GameTable from "@/components/GameTable";
 import StartScreen from "@/components/StartScreen";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
+import { useQuery } from "@tanstack/react-query";
 
 const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   {
@@ -89,50 +90,104 @@ const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   }
 ];
 
+const lobbies = new Map<string, { password: string; players: PlayerCharacteristics[] }>();
+
+const checkLobbyExists = async (name: string, password: string) => {
+  const lobby = lobbies.get(name);
+  if (!lobby) {
+    throw new Error("Лобби не существует");
+  }
+  if (lobby.password !== password) {
+    throw new Error("Неверный пароль");
+  }
+  return lobby;
+};
+
+const createLobby = async (name: string, password: string, initialPlayers: PlayerCharacteristics[]) => {
+  if (lobbies.has(name)) {
+    throw new Error("Лобби с таким названием уже существует");
+  }
+  lobbies.set(name, { password, players: initialPlayers });
+  return { name, password, players: initialPlayers };
+};
+
 const Index = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [players, setPlayers] = useState<PlayerCharacteristics[]>([]);
   const [playerName, setPlayerName] = useState("");
   const [currentLobby, setCurrentLobby] = useState<LobbyCredentials | null>(null);
 
-  const handleStartGame = (lobbyCredentials: LobbyCredentials) => {
+  const { data: lobbyData, error } = useQuery({
+    queryKey: ['lobby', currentLobby?.name],
+    queryFn: async () => {
+      if (!currentLobby) return null;
+      try {
+        return await checkLobbyExists(currentLobby.name, currentLobby.password);
+      } catch (e) {
+        toast.error((e as Error).message);
+        return null;
+      }
+    },
+    enabled: !!currentLobby,
+    refetchInterval: 1000,
+  });
+
+  if (lobbyData && gameStarted) {
+    setPlayers(lobbyData.players);
+  }
+
+  const handleStartGame = async (lobbyCredentials: LobbyCredentials) => {
     if (!playerName.trim()) {
       toast.error("Пожалуйста, введите имя персонажа");
       return;
     }
 
-    setGameStarted(true);
-    setCurrentLobby(lobbyCredentials);
-
-    // Находим первого бота (игрока с именем "Игрок X") и заменяем его на реального игрока
-    const playersWithNames = INITIAL_PLAYERS.map((player, index) => {
-      if (index === 0) {
-        // Первый игрок - это всегда текущий пользователь
+    try {
+      await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
+      
+      const playersWithNames = INITIAL_PLAYERS.map((player, index) => {
+        if (index === 0) {
+          return {
+            ...player,
+            name: playerName,
+          };
+        }
         return {
           ...player,
-          name: playerName,
+          name: `Игрок ${player.id}`,
         };
-      }
-      return {
-        ...player,
-        name: `Игрок ${player.id}`,
-      };
-    });
+      });
 
-    setPlayers(playersWithNames);
-    toast.success(`${lobbyCredentials.name} создано! Характеристики розданы.`);
+      setGameStarted(true);
+      setCurrentLobby(lobbyCredentials);
+      setPlayers(playersWithNames);
+      toast.success(`Вы присоединились к лобби ${lobbyCredentials.name}!`);
+    } catch (error) {
+      if ((error as Error).message === "Лобби не существует" && isCreating) {
+        const playersWithNames = INITIAL_PLAYERS.map((player, index) => ({
+          ...player,
+          name: index === 0 ? playerName : `Игрок ${player.id}`,
+        }));
+
+        await createLobby(lobbyCredentials.name, lobbyCredentials.password, playersWithNames);
+        setGameStarted(true);
+        setCurrentLobby(lobbyCredentials);
+        setPlayers(playersWithNames);
+        toast.success(`Лобби ${lobbyCredentials.name} создано! Характеристики розданы.`);
+      } else {
+        toast.error((error as Error).message);
+      }
+    }
   };
 
   return (
     <div className="min-h-screen bg-bunker-bg text-bunker-text">
       <div className="container mx-auto p-4 space-y-6">
-        {/* Level 1 - Catastrophe */}
         <div className="bg-bunker-accent rounded-lg p-4">
           <h2 className="text-2xl font-bold mb-2">Катастрофа</h2>
           <p>Информация о катастрофе будет здесь</p>
         </div>
 
-        {/* Level 2 - Bunker/Resources */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ResourceTracker />
           <div className="bg-bunker-accent rounded-lg p-4">
@@ -141,7 +196,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Level 3 - Player Status and Inventory */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <PlayerStatus />
           <div className="bg-bunker-accent rounded-lg p-4">
@@ -150,7 +204,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Level 4 - Game Zone */}
         <div className="w-full bg-bunker-accent rounded-lg p-4">
           <h2 className="text-xl font-semibold mb-4">
             {currentLobby ? `Лобби: ${currentLobby.name}` : "Игровая зона"}
