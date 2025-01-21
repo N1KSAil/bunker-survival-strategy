@@ -1,6 +1,6 @@
 import PlayerStatus from "@/components/PlayerStatus";
 import ResourceTracker from "@/components/ResourceTracker";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import GameTable from "@/components/GameTable";
 import StartScreen from "@/components/StartScreen";
@@ -117,7 +117,7 @@ const Index = () => {
   const [playerName, setPlayerName] = useState("");
   const [currentLobby, setCurrentLobby] = useState<LobbyCredentials | null>(null);
 
-  const { data: lobbyData, error } = useQuery({
+  const { data: lobbyData } = useQuery({
     queryKey: ['lobby', currentLobby?.name],
     queryFn: async () => {
       if (!currentLobby) return null;
@@ -132,9 +132,11 @@ const Index = () => {
     refetchInterval: 1000,
   });
 
-  if (lobbyData && gameStarted) {
-    setPlayers(lobbyData.players);
-  }
+  useEffect(() => {
+    if (lobbyData && gameStarted) {
+      setPlayers(lobbyData.players);
+    }
+  }, [lobbyData, gameStarted]);
 
   const handleStartGame = async (lobbyCredentials: LobbyCredentials, isCreating: boolean) => {
     if (!playerName.trim()) {
@@ -143,27 +145,7 @@ const Index = () => {
     }
 
     try {
-      await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
-      
-      const playersWithNames = INITIAL_PLAYERS.map((player, index) => {
-        if (index === 0) {
-          return {
-            ...player,
-            name: playerName,
-          };
-        }
-        return {
-          ...player,
-          name: `Игрок ${player.id}`,
-        };
-      });
-
-      setGameStarted(true);
-      setCurrentLobby(lobbyCredentials);
-      setPlayers(playersWithNames);
-      toast.success(`Вы присоединились к лобби ${lobbyCredentials.name}!`);
-    } catch (error) {
-      if ((error as Error).message === "Лобби не существует" && isCreating) {
+      if (isCreating) {
         const playersWithNames = INITIAL_PLAYERS.map((player, index) => ({
           ...player,
           name: index === 0 ? playerName : `Игрок ${player.id}`,
@@ -175,8 +157,31 @@ const Index = () => {
         setPlayers(playersWithNames);
         toast.success(`Лобби ${lobbyCredentials.name} создано! Характеристики розданы.`);
       } else {
-        toast.error((error as Error).message);
+        const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
+        
+        // Replace the first bot with the new player
+        const updatedPlayers = lobby.players.map((player, index) => {
+          if (index === 0) {
+            return {
+              ...player,
+              name: playerName,
+            };
+          }
+          return player;
+        });
+
+        lobbies.set(lobbyCredentials.name, {
+          password: lobbyCredentials.password,
+          players: updatedPlayers,
+        });
+
+        setGameStarted(true);
+        setCurrentLobby(lobbyCredentials);
+        setPlayers(updatedPlayers);
+        toast.success(`Вы присоединились к лобби ${lobbyCredentials.name}!`);
       }
+    } catch (error) {
+      toast.error((error as Error).message);
     }
   };
 
