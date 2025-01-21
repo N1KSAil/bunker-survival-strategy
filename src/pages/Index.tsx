@@ -159,9 +159,15 @@ const Index = () => {
       } else {
         const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
         
-        // Replace the first bot with the new player
+        // Находим первого бота и заменяем его на нового игрока
+        const firstBotIndex = lobby.players.findIndex(player => player.name.startsWith('Игрок'));
+        
+        if (firstBotIndex === -1) {
+          throw new Error("Лобби уже заполнено");
+        }
+
         const updatedPlayers = lobby.players.map((player, index) => {
-          if (index === 0) {
+          if (index === firstBotIndex) {
             return {
               ...player,
               name: playerName,
