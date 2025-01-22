@@ -159,7 +159,6 @@ const Index = () => {
       } else {
         const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
         
-        // Находим первого бота и заменяем его на нового игрока
         const firstBotIndex = lobby.players.findIndex(player => player.name.startsWith('Игрок'));
         
         if (firstBotIndex === -1) {
@@ -191,46 +190,34 @@ const Index = () => {
     }
   };
 
+  const getCurrentPlayerData = () => {
+    return players.find(player => player.name === playerName);
+  };
+
   return (
     <div className="min-h-screen bg-bunker-bg text-bunker-text">
       <div className="container mx-auto p-4 space-y-6">
-        <div className="bg-bunker-accent rounded-lg p-4">
-          <h2 className="text-2xl font-bold mb-2">Катастрофа</h2>
-          <p>Информация о катастрофе будет здесь</p>
-        </div>
+        {!gameStarted ? (
+          <StartScreen
+            playerName={playerName}
+            onPlayerNameChange={setPlayerName}
+            onStartGame={handleStartGame}
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ResourceTracker />
+              <PlayerStatus playerData={getCurrentPlayerData()} />
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ResourceTracker />
-          <div className="bg-bunker-accent rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Ресурсы</h2>
-            <p>Дополнительная информация о ресурсах</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <PlayerStatus />
-          <div className="bg-bunker-accent rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Инвентарь</h2>
-            <p>Содержимое инвентаря</p>
-          </div>
-        </div>
-
-        <div className="w-full bg-bunker-accent rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-4">
-            {currentLobby ? `Лобби: ${currentLobby.name}` : "Игровая зона"}
-          </h2>
-          <div className="space-y-4">
-            {!gameStarted ? (
-              <StartScreen
-                playerName={playerName}
-                onPlayerNameChange={setPlayerName}
-                onStartGame={handleStartGame}
-              />
-            ) : (
+            <div className="w-full bg-bunker-accent rounded-lg p-4">
+              <h2 className="text-xl font-semibold mb-4">
+                {currentLobby ? `Лобби: ${currentLobby.name}` : "Игровая зона"}
+              </h2>
               <GameTable players={players} currentPlayerName={playerName} />
-            )}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
