@@ -99,7 +99,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
             <TableHead>Профессия</TableHead>
             <TableHead>
               <span className="cursor-help group relative inline-block">
-                Возраст ❓
+                Возраст
                 <span className="invisible group-hover:visible absolute z-10 w-32 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
                   Возраст персонажа
                 </span>
@@ -107,7 +107,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
             </TableHead>
             <TableHead>
               <span className="cursor-help group relative inline-block">
-                Пол ❓
+                Пол
                 <span className="invisible group-hover:visible absolute z-10 w-32 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
                   Пол персонажа
                 </span>
@@ -115,7 +115,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
             </TableHead>
             <TableHead>
               <span className="cursor-help group relative inline-block">
-                Здоровье ❓
+                Здоровье
                 <span className="invisible group-hover:visible absolute z-10 w-32 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
                   Состояние здоровья
                 </span>
@@ -123,7 +123,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
             </TableHead>
             <TableHead>
               <span className="cursor-help group relative inline-block">
-                Хобби ❓
+                Хобби
                 <span className="invisible group-hover:visible absolute z-10 w-32 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
                   Хобби и стаж
                 </span>
@@ -131,7 +131,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
             </TableHead>
             <TableHead>
               <span className="cursor-help group relative inline-block">
-                Образование ❓
+                Образование
                 <span className="invisible group-hover:visible absolute z-10 w-32 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
                   Уровень образования
                 </span>
@@ -139,7 +139,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
             </TableHead>
             <TableHead>
               <span className="cursor-help group relative inline-block">
-                Фобия ❓
+                Фобия
                 <span className="invisible group-hover:visible absolute z-10 w-32 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
                   Страхи персонажа
                 </span>
@@ -147,7 +147,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
             </TableHead>
             <TableHead>
               <span className="cursor-help group relative inline-block">
-                Предмет ❓
+                Предмет
                 <span className="invisible group-hover:visible absolute z-10 w-32 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
                   Предмет в инвентаре
                 </span>
@@ -155,7 +155,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
             </TableHead>
             <TableHead>
               <span className="cursor-help group relative inline-block">
-                Доп. черты ❓
+                Доп. черты
                 <span className="invisible group-hover:visible absolute z-10 w-32 p-2 bg-bunker-bg border border-bunker-accent rounded-lg -translate-y-full left-1/2 -translate-x-1/2">
                   Дополнительные характеристики
                 </span>
