@@ -90,9 +90,11 @@ const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   }
 ];
 
+// Создаем Map для хранения лобби глобально
 const lobbies = new Map<string, { password: string; players: PlayerCharacteristics[] }>();
 
 const checkLobbyExists = async (name: string, password: string) => {
+  console.log("Checking lobby:", name, "Current lobbies:", [...lobbies.keys()]);
   const lobby = lobbies.get(name);
   if (!lobby) {
     throw new Error("Лобби не существует");
@@ -104,6 +106,7 @@ const checkLobbyExists = async (name: string, password: string) => {
 };
 
 const createLobby = async (name: string, password: string, initialPlayers: PlayerCharacteristics[]) => {
+  console.log("Creating lobby:", name);
   if (lobbies.has(name)) {
     throw new Error("Лобби с таким названием уже существует");
   }
@@ -139,6 +142,8 @@ const Index = () => {
   }, [lobbyData, gameStarted]);
 
   const handleStartGame = async (lobbyCredentials: LobbyCredentials, isCreating: boolean) => {
+    console.log("Starting game:", isCreating ? "creating" : "joining", lobbyCredentials.name);
+    
     if (!playerName.trim()) {
       toast.error("Пожалуйста, введите имя персонажа");
       return;
@@ -158,6 +163,7 @@ const Index = () => {
         toast.success(`Лобби ${lobbyCredentials.name} создано! Характеристики розданы.`);
       } else {
         const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
+        console.log("Found lobby:", lobby);
         
         // Создаем нового игрока с характеристиками из INITIAL_PLAYERS
         const newPlayer = {
@@ -179,6 +185,7 @@ const Index = () => {
         toast.success(`Вы присоединились к лобби ${lobbyCredentials.name}!`);
       }
     } catch (error) {
+      console.error("Error in handleStartGame:", error);
       toast.error((error as Error).message);
     }
   };
