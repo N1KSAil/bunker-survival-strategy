@@ -8,7 +8,7 @@ const ResourceTracker = () => {
           <ul className="space-y-2 text-sm">
             <li>Размер: 300 кв. метров</li>
             <li>Время нахождения: 1 год</li>
-            <li>Количество еды: На 5 человек</li>
+            <li>Количество еды: На 6 месяцев</li>
           </ul>
         </div>
       </div>
