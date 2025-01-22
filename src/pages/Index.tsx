@@ -159,21 +159,14 @@ const Index = () => {
       } else {
         const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
         
-        const firstBotIndex = lobby.players.findIndex(player => player.name.startsWith('Игрок'));
-        
-        if (firstBotIndex === -1) {
-          throw new Error("Лобби уже заполнено");
-        }
+        // Создаем нового игрока с характеристиками из INITIAL_PLAYERS
+        const newPlayer = {
+          ...INITIAL_PLAYERS[lobby.players.length % INITIAL_PLAYERS.length],
+          name: playerName,
+          id: lobby.players.length + 1,
+        };
 
-        const updatedPlayers = lobby.players.map((player, index) => {
-          if (index === firstBotIndex) {
-            return {
-              ...player,
-              name: playerName,
-            };
-          }
-          return player;
-        });
+        const updatedPlayers = [...lobby.players, newPlayer];
 
         lobbies.set(lobbyCredentials.name, {
           password: lobbyCredentials.password,
