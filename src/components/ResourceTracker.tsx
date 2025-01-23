@@ -11,6 +11,16 @@ const ResourceTracker = () => {
             <li>Количество еды: На 6 месяцев</li>
           </ul>
         </div>
+        
+        <div className="bg-bunker-bg p-3 rounded">
+          <h3 className="font-medium mb-2">Информация о катаклизме</h3>
+          <ul className="space-y-2 text-sm">
+            <li>Тип: Ядерная война</li>
+            <li>Масштаб: Глобальный</li>
+            <li>Радиационный фон: Критический</li>
+            <li>Прогноз: Восстановление через 15-20 лет</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
