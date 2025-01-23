@@ -1,8 +1,9 @@
 import { PlayerCharacteristics } from "@/types/game";
 
-export const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
+export const INITIAL_PLAYERS: PlayerCharacteristics[] = [
   {
     id: 1,
+    name: "",
     profession: "Врач",
     professionExperience: "15 лет",
     gender: "Женский",
@@ -19,6 +20,7 @@ export const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   },
   {
     id: 2,
+    name: "",
     profession: "Инженер",
     professionExperience: "7 лет",
     gender: "Мужской",
@@ -35,6 +37,7 @@ export const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   },
   {
     id: 3,
+    name: "",
     profession: "Военный",
     professionExperience: "20 лет",
     gender: "Мужской",
@@ -51,6 +54,7 @@ export const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   },
   {
     id: 4,
+    name: "",
     profession: "Биолог",
     professionExperience: "10 лет",
     gender: "Женский",
@@ -67,6 +71,7 @@ export const INITIAL_PLAYERS: Omit<PlayerCharacteristics, 'name'>[] = [
   },
   {
     id: 5,
+    name: "",
     profession: "Психолог",
     professionExperience: "12 лет",
     gender: "Женский",

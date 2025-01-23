@@ -2,7 +2,6 @@ import { useState } from "react";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
 import { toast } from "sonner";
 
-// Глобальное хранилище лобби
 const lobbies = new Map<string, { password: string; players: PlayerCharacteristics[] }>();
 
 export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristics[]) => {
@@ -43,7 +42,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
 
     try {
       if (isCreating) {
-        // При создании лобби первый игрок получает первый набор характеристик
         const firstPlayer = {
           ...initialPlayers[0],
           name: playerName
@@ -62,7 +60,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       } else {
         const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
         
-        // При присоединении к лобби игрок получает следующий доступный набор характеристик
         const nextCharacteristics = initialPlayers[lobby.players.length % initialPlayers.length];
         const newPlayer = {
           ...nextCharacteristics,
