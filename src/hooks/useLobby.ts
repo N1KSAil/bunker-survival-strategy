@@ -11,6 +11,9 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   const [currentLobby, setCurrentLobby] = useState<LobbyCredentials | null>(null);
 
   const checkLobbyExists = async (name: string, password: string) => {
+    console.log("Checking lobby:", name);
+    console.log("Available lobbies:", Array.from(lobbies.keys()));
+    
     const lobby = lobbies.get(name);
     if (!lobby) {
       throw new Error("Лобби не существует");
@@ -22,11 +25,13 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   };
 
   const createLobby = async (name: string, password: string, initialPlayers: PlayerCharacteristics[]) => {
+    console.log("Creating lobby:", name);
     if (lobbies.has(name)) {
       throw new Error("Лобби с таким названием уже существует");
     }
     const newLobby = { password, players: initialPlayers };
     lobbies.set(name, newLobby);
+    console.log("Lobby created successfully");
     return newLobby;
   };
 
@@ -38,28 +43,30 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
 
     try {
       if (isCreating) {
-        const playersWithNames = initialPlayers.map((player, index) => ({
-          ...player,
-          name: index === 0 ? playerName : `Игрок ${player.id}`,
-        }));
-
+        // При создании лобби первый игрок получает первый набор характеристик
+        const firstPlayer = {
+          ...initialPlayers[0],
+          name: playerName
+        };
+        
         const newLobby = await createLobby(
           lobbyCredentials.name,
           lobbyCredentials.password,
-          playersWithNames
+          [firstPlayer]
         );
         
         setGameStarted(true);
         setCurrentLobby(lobbyCredentials);
-        setPlayers(playersWithNames);
+        setPlayers(newLobby.players);
         toast.success(`Лобби ${lobbyCredentials.name} создано! Характеристики розданы.`);
       } else {
         const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
         
+        // При присоединении к лобби игрок получает следующий доступный набор характеристик
+        const nextCharacteristics = initialPlayers[lobby.players.length % initialPlayers.length];
         const newPlayer = {
-          ...initialPlayers[lobby.players.length % initialPlayers.length],
-          name: playerName,
-          id: lobby.players.length + 1,
+          ...nextCharacteristics,
+          name: playerName
         };
 
         const updatedPlayers = [...lobby.players, newPlayer];
