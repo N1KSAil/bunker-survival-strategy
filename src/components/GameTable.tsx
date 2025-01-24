@@ -19,55 +19,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 interface GameTableProps {
   players: PlayerCharacteristics[];
   currentPlayerName: string;
-  getCurrentPlayerData: () => PlayerCharacteristics | undefined;
 }
 
-const GameTable = ({ players, currentPlayerName, getCurrentPlayerData }: GameTableProps) => {
+const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
   const [revealedCharacteristics, setRevealedCharacteristics] = useState<{
     [key: string]: Set<string>;
   }>({});
-
-  useEffect(() => {
-    const loadRevealedCharacteristics = () => {
-      const saved = localStorage.getItem('revealedCharacteristics');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved) as Record<string, string[]>;
-          const converted: { [key: string]: Set<string> } = {};
-          Object.entries(parsed).forEach(([key, value]) => {
-            converted[key] = new Set(value);
-          });
-          setRevealedCharacteristics(converted);
-        } catch (error) {
-          console.error('Error parsing revealed characteristics:', error);
-        }
-      }
-    };
-
-    loadRevealedCharacteristics();
-    const interval = setInterval(loadRevealedCharacteristics, 2000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleRevealCharacteristic = (playerName: string, characteristic: string) => {
     setRevealedCharacteristics((prev) => {
       const newState = { ...prev };
       if (!newState[characteristic]) {
-        newState[characteristic] = new Set<string>();
+        newState[characteristic] = new Set();
       }
       newState[characteristic].add(playerName);
-
-      const forStorage = Object.fromEntries(
-        Object.entries(newState).map(([key, value]) => [key, Array.from(value)])
-      );
-      localStorage.setItem('revealedCharacteristics', JSON.stringify(forStorage));
-
       return newState;
     });
     toast.success(`Характеристика "${characteristic}" раскрыта для всех игроков`);

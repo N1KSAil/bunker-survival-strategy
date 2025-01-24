@@ -1,13 +1,10 @@
 import { PlayerCharacteristics } from "@/types/game";
 
 interface PlayerStatusProps {
-  players: PlayerCharacteristics[];
-  currentPlayerName: string;
+  playerData?: PlayerCharacteristics;
 }
 
-const PlayerStatus = ({ players, currentPlayerName }: PlayerStatusProps) => {
-  const playerData = players.find(player => player.name === currentPlayerName);
-
+const PlayerStatus = ({ playerData }: PlayerStatusProps) => {
   if (!playerData) {
     return null;
   }

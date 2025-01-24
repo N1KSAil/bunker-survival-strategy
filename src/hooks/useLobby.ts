@@ -53,19 +53,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     saveCurrentSessionToStorage(playerName, currentLobby);
   }, [playerName, currentLobby]);
 
-  const handleCloseLobby = () => {
-    if (currentLobby) {
-      const updatedLobbies = new Map(lobbies);
-      updatedLobbies.delete(currentLobby.name);
-      setLobbies(updatedLobbies);
-      setGameStarted(false);
-      setCurrentLobby(null);
-      setPlayers([]);
-      localStorage.removeItem('currentSession');
-      saveLobbiesToStorage(updatedLobbies);
-    }
-  };
-
   const checkLobbyExists = async (name: string, password: string) => {
     console.log("Проверяем лобби:", name);
     console.log("Доступные лобби:", Array.from(lobbies.keys()));
@@ -177,7 +164,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     players,
     currentLobby,
     handleStartGame,
-    handleCloseLobby,
     getCurrentPlayerData: () => players.find(player => player.name === playerName),
   };
 };
