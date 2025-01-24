@@ -52,7 +52,7 @@ const GameLayout = ({
         />
         <GameTable
           players={players}
-          playerName={playerName}
+          currentPlayerName={playerName}
           getCurrentPlayerData={getCurrentPlayerData}
         />
       </div>

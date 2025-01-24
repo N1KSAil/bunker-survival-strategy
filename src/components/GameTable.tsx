@@ -25,21 +25,20 @@ import { toast } from "sonner";
 interface GameTableProps {
   players: PlayerCharacteristics[];
   currentPlayerName: string;
+  getCurrentPlayerData: () => PlayerCharacteristics | undefined;
 }
 
-const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
+const GameTable = ({ players, currentPlayerName, getCurrentPlayerData }: GameTableProps) => {
   const [revealedCharacteristics, setRevealedCharacteristics] = useState<{
     [key: string]: Set<string>;
   }>({});
 
-  // Загрузка раскрытых характеристик из localStorage
   useEffect(() => {
     const loadRevealedCharacteristics = () => {
       const saved = localStorage.getItem('revealedCharacteristics');
       if (saved) {
         try {
           const parsed = JSON.parse(saved) as Record<string, string[]>;
-          // Явно указываем типы и преобразуем массивы строк в Set<string>
           const converted: { [key: string]: Set<string> } = {};
           Object.entries(parsed).forEach(([key, value]) => {
             converted[key] = new Set(value);
@@ -51,12 +50,8 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
       }
     };
 
-    // Загружаем при монтировании
     loadRevealedCharacteristics();
-
-    // Устанавливаем интервал для периодической проверки
     const interval = setInterval(loadRevealedCharacteristics, 2000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -68,7 +63,6 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
       }
       newState[characteristic].add(playerName);
 
-      // Сохраняем в localStorage
       const forStorage = Object.fromEntries(
         Object.entries(newState).map(([key, value]) => [key, Array.from(value)])
       );
