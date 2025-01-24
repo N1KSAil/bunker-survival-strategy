@@ -37,12 +37,17 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
     const loadRevealedCharacteristics = () => {
       const saved = localStorage.getItem('revealedCharacteristics');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        // Преобразуем обычные массивы обратно в Set
-        const converted = Object.fromEntries(
-          Object.entries(parsed).map(([key, value]) => [key, new Set(value)])
-        );
-        setRevealedCharacteristics(converted);
+        try {
+          const parsed = JSON.parse(saved) as Record<string, string[]>;
+          // Явно указываем типы и преобразуем массивы строк в Set<string>
+          const converted: { [key: string]: Set<string> } = {};
+          Object.entries(parsed).forEach(([key, value]) => {
+            converted[key] = new Set(value);
+          });
+          setRevealedCharacteristics(converted);
+        } catch (error) {
+          console.error('Error parsing revealed characteristics:', error);
+        }
       }
     };
 
@@ -59,7 +64,7 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
     setRevealedCharacteristics((prev) => {
       const newState = { ...prev };
       if (!newState[characteristic]) {
-        newState[characteristic] = new Set();
+        newState[characteristic] = new Set<string>();
       }
       newState[characteristic].add(playerName);
 
