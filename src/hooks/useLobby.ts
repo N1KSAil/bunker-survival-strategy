@@ -38,10 +38,10 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   // Восстановление сессии при загрузке
   useEffect(() => {
     const session = getCurrentSessionFromStorage();
-    if (session && !gameStarted) {
+    if (session && playerName && !gameStarted) {
       handleStartGame(session.lobbyCredentials, false);
     }
-  }, []);
+  }, [playerName, gameStarted]);
 
   // Сохранение лобби
   useEffect(() => {
@@ -50,7 +50,9 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
 
   // Сохранение текущей сессии
   useEffect(() => {
-    saveCurrentSessionToStorage(playerName, currentLobby);
+    if (playerName) {
+      saveCurrentSessionToStorage(playerName, currentLobby);
+    }
   }, [playerName, currentLobby]);
 
   const checkLobbyExists = async (name: string, password: string) => {
