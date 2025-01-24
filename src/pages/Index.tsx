@@ -10,7 +10,8 @@ const Index = () => {
     gameStarted, 
     players, 
     currentLobby, 
-    handleStartGame, 
+    handleStartGame,
+    handleCloseLobby, 
     getCurrentPlayerData 
   } = useLobby(playerName, INITIAL_PLAYERS);
 
@@ -29,6 +30,7 @@ const Index = () => {
             playerName={playerName}
             currentLobby={currentLobby}
             getCurrentPlayerData={getCurrentPlayerData}
+            onCloseLobby={handleCloseLobby}
           />
         )}
       </div>
