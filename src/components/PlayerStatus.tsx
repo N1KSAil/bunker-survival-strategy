@@ -6,7 +6,7 @@ interface PlayerStatusProps {
 
 const PlayerStatus = ({ playerData }: PlayerStatusProps) => {
   if (!playerData) {
-    return <div>Загрузка данных игрока...</div>;
+    return null;
   }
 
   return (
