@@ -1,14 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
 import { toast } from "sonner";
 
-// Перемещаем lobbies в глобальную область видимости, чтобы они сохранялись между рендерами
-const lobbies = new Map<string, { password: string; players: PlayerCharacteristics[] }>();
+// Функции для работы с localStorage
+const getLobbiesFromStorage = (): Map<string, { password: string; players: PlayerCharacteristics[] }> => {
+  const lobbiesData = localStorage.getItem('lobbies');
+  if (!lobbiesData) return new Map();
+  return new Map(JSON.parse(lobbiesData));
+};
+
+const saveLobbiesToStorage = (lobbies: Map<string, { password: string; players: PlayerCharacteristics[] }>) => {
+  localStorage.setItem('lobbies', JSON.stringify(Array.from(lobbies.entries())));
+};
 
 export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristics[]) => {
   const [gameStarted, setGameStarted] = useState(false);
   const [players, setPlayers] = useState<PlayerCharacteristics[]>([]);
   const [currentLobby, setCurrentLobby] = useState<LobbyCredentials | null>(null);
+  const [lobbies, setLobbies] = useState<Map<string, { password: string; players: PlayerCharacteristics[] }>>(
+    getLobbiesFromStorage()
+  );
+
+  useEffect(() => {
+    saveLobbiesToStorage(lobbies);
+  }, [lobbies]);
 
   const checkLobbyExists = async (name: string, password: string) => {
     console.log("Проверяем лобби:", name);
@@ -41,9 +56,12 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       players: [firstPlayer] 
     };
     
-    lobbies.set(name, newLobby);
+    const updatedLobbies = new Map(lobbies);
+    updatedLobbies.set(name, newLobby);
+    setLobbies(updatedLobbies);
+    
     console.log("Лобби успешно создано:", name, "с первым игроком:", firstPlayer.name);
-    console.log("Текущие лобби:", Array.from(lobbies.keys()));
+    console.log("Текущие лобби:", Array.from(updatedLobbies.keys()));
     return newLobby;
   };
 
@@ -86,10 +104,12 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         };
 
         const updatedPlayers = [...lobby.players, newPlayer];
-        lobbies.set(lobbyCredentials.name, {
+        const updatedLobbies = new Map(lobbies);
+        updatedLobbies.set(lobbyCredentials.name, {
           password: lobbyCredentials.password,
           players: updatedPlayers,
         });
+        setLobbies(updatedLobbies);
 
         console.log("Успешно присоединились к лобби. Обновленные игроки:", updatedPlayers);
         setGameStarted(true);
