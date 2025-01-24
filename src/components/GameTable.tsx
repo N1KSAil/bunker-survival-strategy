@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 interface GameTableProps {
@@ -32,6 +32,29 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
     [key: string]: Set<string>;
   }>({});
 
+  // Загрузка раскрытых характеристик из localStorage
+  useEffect(() => {
+    const loadRevealedCharacteristics = () => {
+      const saved = localStorage.getItem('revealedCharacteristics');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Преобразуем обычные массивы обратно в Set
+        const converted = Object.fromEntries(
+          Object.entries(parsed).map(([key, value]) => [key, new Set(value)])
+        );
+        setRevealedCharacteristics(converted);
+      }
+    };
+
+    // Загружаем при монтировании
+    loadRevealedCharacteristics();
+
+    // Устанавливаем интервал для периодической проверки
+    const interval = setInterval(loadRevealedCharacteristics, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleRevealCharacteristic = (playerName: string, characteristic: string) => {
     setRevealedCharacteristics((prev) => {
       const newState = { ...prev };
@@ -39,6 +62,13 @@ const GameTable = ({ players, currentPlayerName }: GameTableProps) => {
         newState[characteristic] = new Set();
       }
       newState[characteristic].add(playerName);
+
+      // Сохраняем в localStorage
+      const forStorage = Object.fromEntries(
+        Object.entries(newState).map(([key, value]) => [key, Array.from(value)])
+      );
+      localStorage.setItem('revealedCharacteristics', JSON.stringify(forStorage));
+
       return newState;
     });
     toast.success(`Характеристика "${characteristic}" раскрыта для всех игроков`);
