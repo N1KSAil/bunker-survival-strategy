@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
 import { toast } from "sonner";
 
-// Функции для работы с localStorage
 const getLobbiesFromStorage = (): Map<string, { password: string; players: PlayerCharacteristics[] }> => {
   const lobbiesData = localStorage.getItem('lobbies');
   if (!lobbiesData) return new Map();
@@ -63,6 +62,29 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     console.log("Лобби успешно создано:", name, "с первым игроком:", firstPlayer.name);
     console.log("Текущие лобби:", Array.from(updatedLobbies.keys()));
     return newLobby;
+  };
+
+  const deleteLobby = (name: string, password: string) => {
+    const lobby = lobbies.get(name);
+    if (!lobby) {
+      throw new Error("Лобби не существует");
+    }
+    
+    if (lobby.password !== password) {
+      throw new Error("Неверный пароль");
+    }
+
+    const updatedLobbies = new Map(lobbies);
+    updatedLobbies.delete(name);
+    setLobbies(updatedLobbies);
+    
+    if (currentLobby?.name === name) {
+      setGameStarted(false);
+      setCurrentLobby(null);
+      setPlayers([]);
+    }
+    
+    toast.success(`Лобби ${name} удалено`);
   };
 
   const handleStartGame = async (lobbyCredentials: LobbyCredentials, isCreating: boolean) => {
@@ -128,6 +150,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     players,
     currentLobby,
     handleStartGame,
+    deleteLobby,
     getCurrentPlayerData: () => players.find(player => player.name === playerName),
   };
 };
