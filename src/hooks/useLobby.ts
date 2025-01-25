@@ -24,20 +24,20 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     saveLobbiesToStorage(lobbies);
   }, [lobbies]);
 
-  const checkLobbyExists = async (name: string, password: string) => {
+  const checkLobbyExists = (name: string): boolean => {
+    return lobbies.has(name);
+  };
+
+  const checkLobbyPassword = (name: string, password: string): boolean => {
     const lobby = lobbies.get(name);
-    if (!lobby) {
-      throw new Error("Лобби не существует");
-    }
-    
-    if (lobby.password !== password) {
-      throw new Error("Неверный пароль");
-    }
-    
-    return lobby;
+    return lobby?.password === password;
   };
 
   const createLobby = async (name: string, password: string, firstPlayer: PlayerCharacteristics) => {
+    if (checkLobbyExists(name)) {
+      throw new Error("Лобби с таким названием уже существует");
+    }
+    
     const newLobby = { 
       password, 
       players: [firstPlayer] 
@@ -51,12 +51,11 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   };
 
   const deleteLobby = (name: string, password: string) => {
-    const lobby = lobbies.get(name);
-    if (!lobby) {
+    if (!checkLobbyExists(name)) {
       throw new Error("Лобби не существует");
     }
     
-    if (lobby.password !== password) {
+    if (!checkLobbyPassword(name, password)) {
       throw new Error("Неверный пароль");
     }
 
@@ -90,6 +89,11 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       }
 
       if (isCreating) {
+        if (checkLobbyExists(lobbyCredentials.name)) {
+          toast.error("Лобби с таким названием уже существует");
+          return;
+        }
+
         const firstPlayer = {
           ...initialPlayers[0],
           name: playerName,
@@ -106,8 +110,23 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         setPlayers(newLobby.players);
         toast.success(`Лобби ${lobbyCredentials.name} создано!`);
       } else {
-        const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
+        if (!checkLobbyExists(lobbyCredentials.name)) {
+          toast.error("Лобби не существует");
+          return;
+        }
+
+        if (!checkLobbyPassword(lobbyCredentials.name, lobbyCredentials.password)) {
+          toast.error("Неверный пароль");
+          return;
+        }
+
+        const lobby = lobbies.get(lobbyCredentials.name);
         
+        if (!lobby) {
+          toast.error("Ошибка при получении данных лобби");
+          return;
+        }
+
         if (lobby.players.some(player => player.name === playerName)) {
           toast.error("Игрок с таким именем уже присоединился к лобби");
           return;
