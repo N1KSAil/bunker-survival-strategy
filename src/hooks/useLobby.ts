@@ -25,12 +25,8 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   }, [lobbies]);
 
   const checkLobbyExists = async (name: string, password: string) => {
-    console.log("Проверяем лобби:", name);
-    console.log("Доступные лобби:", Array.from(lobbies.keys()));
-    
     const lobby = lobbies.get(name);
     if (!lobby) {
-      console.log("Лобби не найдено:", name);
       throw new Error("Лобби не существует");
     }
     
@@ -38,15 +34,11 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       throw new Error("Неверный пароль");
     }
     
-    console.log("Лобби найдено:", name, "с игроками:", lobby.players);
     return lobby;
   };
 
   const createLobby = async (name: string, password: string, firstPlayer: PlayerCharacteristics) => {
-    console.log("Создаем новое лобби:", name);
-    
     if (lobbies.has(name)) {
-      console.log("Лобби уже существует:", name);
       throw new Error("Лобби с таким названием уже существует");
     }
     
@@ -59,8 +51,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     updatedLobbies.set(name, newLobby);
     setLobbies(updatedLobbies);
     
-    console.log("Лобби успешно создано:", name, "с первым игроком:", firstPlayer.name);
-    console.log("Текущие лобби:", Array.from(updatedLobbies.keys()));
     return newLobby;
   };
 
@@ -104,7 +94,12 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       }
 
       if (isCreating) {
-        console.log("Создаем новое лобби:", lobbyCredentials.name);
+        // Check if lobby exists before attempting to create
+        if (lobbies.has(lobbyCredentials.name)) {
+          toast.error("Лобби с таким названием уже существует");
+          return;
+        }
+
         const firstPlayer = {
           ...initialPlayers[0],
           name: playerName,
@@ -121,11 +116,11 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         setPlayers(newLobby.players);
         toast.success(`Лобби ${lobbyCredentials.name} создано!`);
       } else {
-        console.log("Присоединяемся к существующему лобби:", lobbyCredentials.name);
         const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
         
         if (lobby.players.some(player => player.name === playerName)) {
-          throw new Error("Игрок с таким именем уже присоединился к лобби");
+          toast.error("Игрок с таким именем уже присоединился к лобби");
+          return;
         }
 
         const nextCharacteristics = initialPlayers[lobby.players.length % initialPlayers.length];
@@ -142,7 +137,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         });
         setLobbies(updatedLobbies);
 
-        console.log("Успешно присоединились к лобби. Обновленные игроки:", updatedPlayers);
         setGameStarted(true);
         setCurrentLobby(lobbyCredentials);
         setPlayers(updatedPlayers);
