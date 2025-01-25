@@ -38,10 +38,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   };
 
   const createLobby = async (name: string, password: string, firstPlayer: PlayerCharacteristics) => {
-    if (lobbies.has(name)) {
-      throw new Error("Лобби с таким названием уже существует");
-    }
-    
     const newLobby = { 
       password, 
       players: [firstPlayer] 
@@ -94,12 +90,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       }
 
       if (isCreating) {
-        // Check if lobby exists before attempting to create
-        if (lobbies.has(lobbyCredentials.name)) {
-          toast.error("Лобби с таким названием уже существует");
-          return;
-        }
-
         const firstPlayer = {
           ...initialPlayers[0],
           name: playerName,
