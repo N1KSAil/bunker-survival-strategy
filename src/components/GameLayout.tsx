@@ -10,6 +10,7 @@ interface GameLayoutProps {
   currentLobby: LobbyCredentials | null;
   getCurrentPlayerData: () => PlayerCharacteristics | undefined;
   onDeleteLobby?: (name: string, password: string) => void;
+  onDeleteAllLobbies?: () => void;
 }
 
 const GameLayout = ({ 
@@ -17,7 +18,8 @@ const GameLayout = ({
   playerName, 
   currentLobby, 
   getCurrentPlayerData,
-  onDeleteLobby 
+  onDeleteLobby,
+  onDeleteAllLobbies
 }: GameLayoutProps) => {
   const isCreator = players[0]?.name === playerName;
 
@@ -39,15 +41,26 @@ const GameLayout = ({
           <h2 className="text-xl font-semibold">
             {currentLobby ? `Лобби: ${currentLobby.name}` : "Игровая зона"}
           </h2>
-          {isCreator && currentLobby && (
-            <Button 
-              variant="destructive"
-              onClick={handleDeleteLobby}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Удалить лобби
-            </Button>
-          )}
+          <div className="space-x-2">
+            {isCreator && currentLobby && (
+              <Button 
+                variant="destructive"
+                onClick={handleDeleteLobby}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Удалить лобби
+              </Button>
+            )}
+            {isCreator && (
+              <Button 
+                variant="destructive"
+                onClick={onDeleteAllLobbies}
+                className="bg-red-800 hover:bg-red-900"
+              >
+                Удалить все лобби
+              </Button>
+            )}
+          </div>
         </div>
         <GameTable players={players} currentPlayerName={playerName} />
       </div>

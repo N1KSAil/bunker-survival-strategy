@@ -87,6 +87,15 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     toast.success(`Лобби ${name} удалено`);
   };
 
+  const deleteAllLobbies = () => {
+    localStorage.removeItem('lobbies');
+    setLobbies(new Map());
+    setGameStarted(false);
+    setCurrentLobby(null);
+    setPlayers([]);
+    toast.success('Все лобби удалены');
+  };
+
   const handleStartGame = async (lobbyCredentials: LobbyCredentials, isCreating: boolean) => {
     try {
       if (!playerName.trim()) {
@@ -151,6 +160,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     currentLobby,
     handleStartGame,
     deleteLobby,
+    deleteAllLobbies,
     getCurrentPlayerData: () => players.find(player => player.name === playerName),
   };
 };
