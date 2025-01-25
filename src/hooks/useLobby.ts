@@ -13,20 +13,6 @@ const saveLobbiesToStorage = (lobbies: Map<string, { password: string; players: 
   localStorage.setItem('lobbies', JSON.stringify(Array.from(lobbies.entries())));
 };
 
-const getCurrentSessionFromStorage = () => {
-  const session = localStorage.getItem('currentSession');
-  if (!session) return null;
-  return JSON.parse(session);
-};
-
-const saveCurrentSessionToStorage = (playerName: string, lobbyCredentials: LobbyCredentials | null) => {
-  if (lobbyCredentials) {
-    localStorage.setItem('currentSession', JSON.stringify({ playerName, lobbyCredentials }));
-  } else {
-    localStorage.removeItem('currentSession');
-  }
-};
-
 export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristics[]) => {
   const [gameStarted, setGameStarted] = useState(false);
   const [players, setPlayers] = useState<PlayerCharacteristics[]>([]);
@@ -35,25 +21,9 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     getLobbiesFromStorage()
   );
 
-  // Восстановление сессии при загрузке
-  useEffect(() => {
-    const session = getCurrentSessionFromStorage();
-    if (session && playerName && !gameStarted) {
-      handleStartGame(session.lobbyCredentials, false);
-    }
-  }, [playerName, gameStarted]);
-
-  // Сохранение лобби
   useEffect(() => {
     saveLobbiesToStorage(lobbies);
   }, [lobbies]);
-
-  // Сохранение текущей сессии
-  useEffect(() => {
-    if (playerName) {
-      saveCurrentSessionToStorage(playerName, currentLobby);
-    }
-  }, [playerName, currentLobby]);
 
   const checkLobbyExists = async (name: string, password: string) => {
     console.log("Проверяем лобби:", name);
@@ -123,18 +93,10 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         console.log("Присоединяемся к существующему лобби:", lobbyCredentials.name);
         const lobby = await checkLobbyExists(lobbyCredentials.name, lobbyCredentials.password);
         
-        // Проверяем, есть ли уже игрок с таким именем в лобби
-        const existingPlayer = lobby.players.find(player => player.name === playerName);
-        if (existingPlayer) {
-          // Если игрок уже есть, просто переподключаем его
-          setGameStarted(true);
-          setCurrentLobby(lobbyCredentials);
-          setPlayers(lobby.players);
-          toast.success(`Вы переподключились к лобби ${lobbyCredentials.name}!`);
-          return;
+        if (lobby.players.some(player => player.name === playerName)) {
+          throw new Error("Игрок с таким именем уже присоединился к лобби");
         }
 
-        // Если это новый игрок
         const nextCharacteristics = initialPlayers[lobby.players.length % initialPlayers.length];
         const newPlayer = {
           ...nextCharacteristics,
