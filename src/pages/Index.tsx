@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLobby } from "@/hooks/useLobby";
 import StartScreen from "@/components/StartScreen";
 import GameLayout from "@/components/GameLayout";
 import { INITIAL_PLAYERS } from "@/data/initialPlayers";
+import AuthForm from "@/components/AuthForm";
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL!,
+  process.env.VITE_SUPABASE_ANON_KEY!
+);
 
 const Index = () => {
   const [playerName, setPlayerName] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { 
     gameStarted, 
     players, 
@@ -15,6 +23,32 @@ const Index = () => {
     deleteAllLobbies,
     getCurrentPlayerData 
   } = useLobby(playerName, INITIAL_PLAYERS);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-bunker-bg text-bunker-text">
+        <div className="container mx-auto p-4 max-w-md">
+          <h1 className="text-2xl font-bold mb-6 text-center">Добро пожаловать</h1>
+          <AuthForm onSuccess={() => setIsAuthenticated(true)} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bunker-bg text-bunker-text">
