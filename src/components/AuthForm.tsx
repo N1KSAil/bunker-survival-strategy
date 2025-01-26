@@ -24,19 +24,44 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
           email,
           password,
         });
-        if (error) throw error;
+        
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error('Неверный email или пароль');
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error('Пожалуйста, подтвердите ваш email');
+          } else {
+            toast.error(error.message);
+          }
+          return;
+        }
+        
         toast.success("Успешный вход в аккаунт!");
+        onSuccess();
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: window.location.origin
+          }
         });
-        if (error) throw error;
+        
+        if (error) {
+          if (error.message.includes('already registered')) {
+            toast.error('Этот email уже зарегистрирован');
+          } else {
+            toast.error(error.message);
+          }
+          return;
+        }
+        
         toast.success("Регистрация успешна! Проверьте вашу почту.");
+        onSuccess();
       }
-      onSuccess();
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Auth error:', error);
+      toast.error('Произошла ошибка при аутентификации');
     } finally {
       setLoading(false);
     }
@@ -61,6 +86,7 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Пароль"
           required
+          minLength={6}
           className="bg-bunker-bg border-bunker-accent"
         />
       </div>
