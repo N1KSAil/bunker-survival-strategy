@@ -9,7 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bunker: {
+        Row: {
+          created_at: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      lobby_participants: {
+        Row: {
+          id: string
+          joined_at: string | null
+          lobby_name: string
+          lobby_password: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          lobby_name: string
+          lobby_password: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          lobby_name?: string
+          lobby_password?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

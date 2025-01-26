@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const getLobbiesFromStorage = (): Map<string, { password: string; players: PlayerCharacteristics[] }> => {
   const lobbiesData = localStorage.getItem('lobbies');
@@ -33,9 +34,57 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     return lobby?.password === password;
   };
 
+  const checkAndReconnectToLobby = useCallback(async (userId: string) => {
+    try {
+      const { data: participation, error } = await supabase
+        .from('lobby_participants')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        if (error.code !== 'PGRST116') { // Not found error
+          console.error("Error checking lobby participation:", error);
+          return false;
+        }
+        return false;
+      }
+
+      if (participation) {
+        const lobby = lobbies.get(participation.lobby_name);
+        if (lobby) {
+          setGameStarted(true);
+          setCurrentLobby({
+            name: participation.lobby_name,
+            password: participation.lobby_password
+          });
+          setPlayers(lobby.players);
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error("Error in checkAndReconnectToLobby:", error);
+      return false;
+    }
+  }, [lobbies]);
+
   const createLobby = async (name: string, password: string, firstPlayer: PlayerCharacteristics) => {
     if (checkLobbyExists(name)) {
       throw new Error("Лобби с таким названием уже существует");
+    }
+    
+    const { error } = await supabase
+      .from('lobby_participants')
+      .insert({
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        lobby_name: name,
+        lobby_password: password
+      });
+
+    if (error) {
+      console.error("Error creating lobby participation:", error);
+      throw new Error("Ошибка при создании лобби");
     }
     
     const newLobby = { 
@@ -50,13 +99,23 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     return newLobby;
   };
 
-  const deleteLobby = (name: string, password: string) => {
+  const deleteLobby = async (name: string, password: string) => {
     if (!checkLobbyExists(name)) {
       throw new Error("Лобби не существует");
     }
     
     if (!checkLobbyPassword(name, password)) {
       throw new Error("Неверный пароль");
+    }
+
+    const { error } = await supabase
+      .from('lobby_participants')
+      .delete()
+      .eq('lobby_name', name);
+
+    if (error) {
+      console.error("Error deleting lobby participation:", error);
+      throw new Error("Ошибка при удалении лобби");
     }
 
     const updatedLobbies = new Map(lobbies);
@@ -72,7 +131,17 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     toast.success(`Лобби ${name} удалено`);
   };
 
-  const deleteAllLobbies = () => {
+  const deleteAllLobbies = async () => {
+    const { error } = await supabase
+      .from('lobby_participants')
+      .delete()
+      .neq('user_id', 'none');
+
+    if (error) {
+      console.error("Error deleting all lobbies:", error);
+      throw new Error("Ошибка при удалении всех лобби");
+    }
+
     localStorage.removeItem('lobbies');
     setLobbies(new Map());
     setGameStarted(false);
@@ -85,6 +154,12 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     try {
       if (!playerName.trim()) {
         toast.error("Пожалуйста, введите имя персонажа");
+        return;
+      }
+
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
+        toast.error("Необходимо авторизоваться");
         return;
       }
 
@@ -117,6 +192,24 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
 
         if (!checkLobbyPassword(lobbyCredentials.name, lobbyCredentials.password)) {
           toast.error("Неверный пароль");
+          return;
+        }
+
+        const { error } = await supabase
+          .from('lobby_participants')
+          .insert({
+            user_id: user.data.user.id,
+            lobby_name: lobbyCredentials.name,
+            lobby_password: lobbyCredentials.password
+          });
+
+        if (error) {
+          if (error.code === '23505') { // Unique violation
+            toast.error("Вы уже присоединены к лобби");
+          } else {
+            console.error("Error joining lobby:", error);
+            toast.error("Ошибка при присоединении к лобби");
+          }
           return;
         }
 
@@ -165,5 +258,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     deleteLobby,
     deleteAllLobbies,
     getCurrentPlayerData: () => players.find(player => player.name === playerName),
+    checkAndReconnectToLobby
   };
 };
