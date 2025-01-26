@@ -40,13 +40,10 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         .from('lobby_participants')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code !== 'PGRST116') { // Not found error
-          console.error("Error checking lobby participation:", error);
-          return false;
-        }
+        console.error("Error checking lobby participation:", error);
         return false;
       }
 
@@ -132,22 +129,27 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   };
 
   const deleteAllLobbies = async () => {
-    const { error } = await supabase
-      .from('lobby_participants')
-      .delete()
-      .neq('user_id', 'none');
+    try {
+      const { error } = await supabase
+        .from('lobby_participants')
+        .delete()
+        .not('id', 'is', null); // Delete all records instead of using user_id condition
 
-    if (error) {
-      console.error("Error deleting all lobbies:", error);
+      if (error) {
+        console.error("Error deleting all lobbies:", error);
+        throw new Error("Ошибка при удалении всех лобби");
+      }
+
+      localStorage.removeItem('lobbies');
+      setLobbies(new Map());
+      setGameStarted(false);
+      setCurrentLobby(null);
+      setPlayers([]);
+      toast.success('Все лобби удалены');
+    } catch (error) {
+      console.error("Error in deleteAllLobbies:", error);
       throw new Error("Ошибка при удалении всех лобби");
     }
-
-    localStorage.removeItem('lobbies');
-    setLobbies(new Map());
-    setGameStarted(false);
-    setCurrentLobby(null);
-    setPlayers([]);
-    toast.success('Все лобби удалены');
   };
 
   const handleStartGame = async (lobbyCredentials: LobbyCredentials, isCreating: boolean) => {
