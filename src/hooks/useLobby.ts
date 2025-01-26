@@ -1,38 +1,29 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
-const getLobbiesFromStorage = (): Map<string, { password: string; players: PlayerCharacteristics[] }> => {
-  const lobbiesData = localStorage.getItem('lobbies');
-  if (!lobbiesData) return new Map();
-  return new Map(JSON.parse(lobbiesData));
-};
-
-const saveLobbiesToStorage = (lobbies: Map<string, { password: string; players: PlayerCharacteristics[] }>) => {
-  localStorage.setItem('lobbies', JSON.stringify(Array.from(lobbies.entries())));
-};
+import { useLobbyManagement } from "./useLobbyManagement";
+import { useGameState } from "./useGameState";
 
 export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristics[]) => {
-  const [gameStarted, setGameStarted] = useState(false);
-  const [players, setPlayers] = useState<PlayerCharacteristics[]>([]);
-  const [currentLobby, setCurrentLobby] = useState<LobbyCredentials | null>(null);
-  const [lobbies, setLobbies] = useState<Map<string, { password: string; players: PlayerCharacteristics[] }>>(
-    getLobbiesFromStorage()
-  );
+  const {
+    lobbies,
+    checkLobbyExists,
+    checkLobbyPassword,
+    createLobby,
+    deleteLobby,
+    deleteAllLobbies,
+  } = useLobbyManagement();
 
-  useEffect(() => {
-    saveLobbiesToStorage(lobbies);
-  }, [lobbies]);
-
-  const checkLobbyExists = (name: string): boolean => {
-    return lobbies.has(name);
-  };
-
-  const checkLobbyPassword = (name: string, password: string): boolean => {
-    const lobby = lobbies.get(name);
-    return lobby?.password === password;
-  };
+  const {
+    gameStarted,
+    setGameStarted,
+    players,
+    setPlayers,
+    currentLobby,
+    setCurrentLobby,
+    resetGameState,
+  } = useGameState();
 
   const checkAndReconnectToLobby = useCallback(async (userId: string) => {
     try {
@@ -64,93 +55,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       console.error("Error in checkAndReconnectToLobby:", error);
       return false;
     }
-  }, [lobbies]);
-
-  const createLobby = async (name: string, password: string, firstPlayer: PlayerCharacteristics) => {
-    if (checkLobbyExists(name)) {
-      throw new Error("Лобби с таким названием уже существует");
-    }
-    
-    const { error } = await supabase
-      .from('lobby_participants')
-      .insert({
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-        lobby_name: name,
-        lobby_password: password
-      });
-
-    if (error) {
-      console.error("Error creating lobby participation:", error);
-      throw new Error("Ошибка при создании лобби");
-    }
-    
-    const newLobby = { 
-      password, 
-      players: [firstPlayer] 
-    };
-    
-    const updatedLobbies = new Map(lobbies);
-    updatedLobbies.set(name, newLobby);
-    setLobbies(updatedLobbies);
-    
-    return newLobby;
-  };
-
-  const deleteLobby = async (name: string, password: string) => {
-    if (!checkLobbyExists(name)) {
-      throw new Error("Лобби не существует");
-    }
-    
-    if (!checkLobbyPassword(name, password)) {
-      throw new Error("Неверный пароль");
-    }
-
-    const { error } = await supabase
-      .from('lobby_participants')
-      .delete()
-      .eq('lobby_name', name);
-
-    if (error) {
-      console.error("Error deleting lobby participation:", error);
-      throw new Error("Ошибка при удалении лобби");
-    }
-
-    const updatedLobbies = new Map(lobbies);
-    updatedLobbies.delete(name);
-    setLobbies(updatedLobbies);
-    
-    if (currentLobby?.name === name) {
-      setGameStarted(false);
-      setCurrentLobby(null);
-      setPlayers([]);
-    }
-    
-    toast.success(`Лобби ${name} удалено`);
-  };
-
-  const deleteAllLobbies = async () => {
-    try {
-      const { error } = await supabase
-        .from('lobby_participants')
-        .delete()
-        .not('id', 'is', null); // Delete all records instead of using user_id condition
-
-      if (error) {
-        console.error("Error deleting all lobbies:", error);
-        throw new Error("Ошибка при удалении всех лобби");
-      }
-
-      localStorage.removeItem('lobbies');
-      setLobbies(new Map());
-      setGameStarted(false);
-      setCurrentLobby(null);
-      setPlayers([]);
-      toast.success('Все лобби удалены');
-    } catch (error) {
-      console.error("Error in deleteAllLobbies:", error);
-      throw new Error("Ошибка при удалении всех лобби");
-    }
-  };
+  }, [lobbies, setGameStarted, setCurrentLobby, setPlayers]);
 
   const handleStartGame = async (lobbyCredentials: LobbyCredentials, isCreating: boolean) => {
     try {
@@ -166,11 +71,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       }
 
       if (isCreating) {
-        if (checkLobbyExists(lobbyCredentials.name)) {
-          toast.error("Лобби с таким названием уже существует");
-          return;
-        }
-
         const firstPlayer = {
           ...initialPlayers[0],
           name: playerName,
@@ -206,7 +106,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
           });
 
         if (error) {
-          if (error.code === '23505') { // Unique violation
+          if (error.code === '23505') {
             toast.error("Вы уже присоединены к лобби");
           } else {
             console.error("Error joining lobby:", error);
@@ -216,7 +116,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         }
 
         const lobby = lobbies.get(lobbyCredentials.name);
-        
         if (!lobby) {
           toast.error("Ошибка при получении данных лобби");
           return;
@@ -234,13 +133,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         };
 
         const updatedPlayers = [...lobby.players, newPlayer];
-        const updatedLobbies = new Map(lobbies);
-        updatedLobbies.set(lobbyCredentials.name, {
-          password: lobbyCredentials.password,
-          players: updatedPlayers,
-        });
-        setLobbies(updatedLobbies);
-
         setGameStarted(true);
         setCurrentLobby(lobbyCredentials);
         setPlayers(updatedPlayers);
@@ -257,8 +149,18 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     players,
     currentLobby,
     handleStartGame,
-    deleteLobby,
-    deleteAllLobbies,
+    deleteLobby: async (name: string, password: string) => {
+      const result = await deleteLobby(name, password);
+      if (result && currentLobby?.name === name) {
+        resetGameState();
+      }
+    },
+    deleteAllLobbies: async () => {
+      const result = await deleteAllLobbies();
+      if (result) {
+        resetGameState();
+      }
+    },
     getCurrentPlayerData: () => players.find(player => player.name === playerName),
     checkAndReconnectToLobby
   };
