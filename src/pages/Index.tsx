@@ -4,12 +4,7 @@ import StartScreen from "@/components/StartScreen";
 import GameLayout from "@/components/GameLayout";
 import { INITIAL_PLAYERS } from "@/data/initialPlayers";
 import AuthForm from "@/components/AuthForm";
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [playerName, setPlayerName] = useState("");
