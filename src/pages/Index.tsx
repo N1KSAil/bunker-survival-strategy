@@ -6,10 +6,12 @@ import { INITIAL_PLAYERS } from "@/data/initialPlayers";
 import AuthForm from "@/components/AuthForm";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 const Index = () => {
   const [playerName, setPlayerName] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { 
     gameStarted, 
     players, 
@@ -53,11 +55,35 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, [checkAndReconnectToLobby, resetGameState]);
 
+  // Simulate loading progress
+  useEffect(() => {
+    if (isAuthChecking || isLoading) {
+      const timer = setInterval(() => {
+        setProgress((oldProgress) => {
+          const newProgress = Math.min(oldProgress + 10, 90);
+          return isAuthChecking || isLoading ? newProgress : 100;
+        });
+      }, 200);
+
+      return () => {
+        clearInterval(timer);
+        if (!isAuthChecking && !isLoading) {
+          setProgress(100);
+          const resetTimer = setTimeout(() => setProgress(0), 500);
+          return () => clearTimeout(resetTimer);
+        }
+      };
+    } else {
+      setProgress(0);
+    }
+  }, [isAuthChecking, isLoading]);
+
   if (isAuthChecking) {
     return (
-      <div className="min-h-screen bg-bunker-bg text-bunker-text flex items-center justify-center">
-        <div className="text-center">
-          <p>Проверка авторизации...</p>
+      <div className="min-h-screen bg-bunker-bg text-bunker-text flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-4">
+          <p className="text-center mb-4">Проверка авторизации...</p>
+          <Progress value={progress} className="w-full" />
         </div>
       </div>
     );
@@ -76,9 +102,10 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-bunker-bg text-bunker-text flex items-center justify-center">
-        <div className="text-center">
-          <p>Загрузка...</p>
+      <div className="min-h-screen bg-bunker-bg text-bunker-text flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-4">
+          <p className="text-center mb-4">Загрузка...</p>
+          <Progress value={progress} className="w-full" />
         </div>
       </div>
     );
