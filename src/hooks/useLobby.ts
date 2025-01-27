@@ -27,16 +27,11 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
 
   const checkAndReconnectToLobby = useCallback(async (userId: string) => {
     try {
-      const { data: participation, error } = await supabase
+      const { data: participation } = await supabase
         .from('lobby_participants')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
-
-      if (error) {
-        console.error("Error checking lobby participation:", error);
-        return false;
-      }
 
       if (participation) {
         const lobby = lobbies.get(participation.lobby_name);

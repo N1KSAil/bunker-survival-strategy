@@ -29,7 +29,10 @@ const Index = () => {
         setIsAuthenticated(!!session);
         
         if (session) {
-          await checkAndReconnectToLobby(session.user.id);
+          const reconnected = await checkAndReconnectToLobby(session.user.id);
+          if (reconnected) {
+            toast.success("Переподключение к лобби выполнено успешно");
+          }
         }
       } catch (error) {
         console.error("Auth check error:", error);
@@ -43,11 +46,9 @@ const Index = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setIsAuthenticated(!!session);
-      setIsLoading(true);
       if (session) {
         await checkAndReconnectToLobby(session.user.id);
       }
-      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
