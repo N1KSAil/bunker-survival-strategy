@@ -62,10 +62,10 @@ const Index = () => {
     if (isAuthChecking || isLoading) {
       progressTimer = window.setInterval(() => {
         setProgress((oldProgress) => {
-          const newProgress = Math.min(oldProgress + 10, 90);
-          return isAuthChecking || isLoading ? newProgress : 100;
+          if (oldProgress >= 100) return 100;
+          return oldProgress + 2;
         });
-      }, 200);
+      }, 50);
     } else {
       setProgress(100);
       resetTimer = window.setTimeout(() => setProgress(0), 500);
