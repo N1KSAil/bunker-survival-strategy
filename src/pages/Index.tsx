@@ -55,27 +55,26 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, [checkAndReconnectToLobby, resetGameState]);
 
-  // Simulate loading progress
   useEffect(() => {
+    let progressTimer: number | undefined;
+    let resetTimer: number | undefined;
+
     if (isAuthChecking || isLoading) {
-      const timer = setInterval(() => {
+      progressTimer = window.setInterval(() => {
         setProgress((oldProgress) => {
           const newProgress = Math.min(oldProgress + 10, 90);
           return isAuthChecking || isLoading ? newProgress : 100;
         });
       }, 200);
-
-      return () => {
-        clearInterval(timer);
-        if (!isAuthChecking && !isLoading) {
-          setProgress(100);
-          const resetTimer = setTimeout(() => setProgress(0), 500);
-          return () => clearTimeout(resetTimer);
-        }
-      };
     } else {
-      setProgress(0);
+      setProgress(100);
+      resetTimer = window.setTimeout(() => setProgress(0), 500);
     }
+
+    return () => {
+      if (progressTimer) window.clearInterval(progressTimer);
+      if (resetTimer) window.clearTimeout(resetTimer);
+    };
   }, [isAuthChecking, isLoading]);
 
   if (isAuthChecking) {
