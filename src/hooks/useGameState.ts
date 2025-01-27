@@ -5,11 +5,13 @@ export const useGameState = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [players, setPlayers] = useState<PlayerCharacteristics[]>([]);
   const [currentLobby, setCurrentLobby] = useState<LobbyCredentials | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const resetGameState = () => {
     setGameStarted(false);
     setCurrentLobby(null);
     setPlayers([]);
+    setIsLoading(false);
   };
 
   return {
@@ -19,6 +21,8 @@ export const useGameState = () => {
     setPlayers,
     currentLobby,
     setCurrentLobby,
+    isLoading,
+    setIsLoading,
     resetGameState,
   };
 };

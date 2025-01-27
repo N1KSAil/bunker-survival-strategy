@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LobbyData, getLobbiesFromStorage, saveLobbiesToStorage } from "@/utils/lobbyStorage";
-import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
+import { PlayerCharacteristics } from "@/types/game";
 
 export const useLobbyManagement = () => {
   const [lobbies, setLobbies] = useState<Map<string, LobbyData>>(getLobbiesFromStorage());
@@ -72,26 +72,20 @@ export const useLobbyManagement = () => {
   };
 
   const deleteAllLobbies = async () => {
-    try {
-      const { error } = await supabase
-        .from('lobby_participants')
-        .delete()
-        .not('id', 'is', null);
+    const { error } = await supabase
+      .from('lobby_participants')
+      .delete()
+      .not('id', 'is', null);
 
-      if (error) {
-        console.error("Error deleting all lobbies:", error);
-        throw new Error("Ошибка при удалении всех лобби");
-      }
-
-      localStorage.removeItem('lobbies');
-      setLobbies(new Map());
-      saveLobbiesToStorage(new Map());
-      toast.success('Все лобби удалены');
-      return true;
-    } catch (error) {
-      console.error("Error in deleteAllLobbies:", error);
+    if (error) {
+      console.error("Error deleting all lobbies:", error);
       throw new Error("Ошибка при удалении всех лобби");
     }
+
+    setLobbies(new Map());
+    saveLobbiesToStorage(new Map());
+    toast.success('Все лобби удалены');
+    return true;
   };
 
   return {
