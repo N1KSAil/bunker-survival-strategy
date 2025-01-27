@@ -15,6 +15,8 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     setCurrentLobby,
     isLoading,
     setIsLoading,
+    isAuthChecking,
+    setIsAuthChecking,
     resetGameState
   } = useGameState();
 
@@ -77,8 +79,12 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   };
 
   const checkAndReconnectToLobby = useCallback(async (userId: string) => {
+    if (!userId) {
+      setIsAuthChecking(false);
+      return false;
+    }
+
     try {
-      setIsLoading(true);
       const { data: participantData, error } = await supabase
         .from('lobby_participants')
         .select('*')
@@ -86,7 +92,10 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         .maybeSingle();
 
       if (error) throw error;
-      if (!participantData) return false;
+      if (!participantData) {
+        setIsAuthChecking(false);
+        return false;
+      }
 
       const { lobby_name, lobby_password } = participantData;
       const lobby = lobbies.get(lobby_name);
@@ -95,23 +104,25 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         setCurrentLobby({ name: lobby_name, password: lobby_password });
         setPlayers(lobby.players);
         setGameStarted(true);
+        setIsAuthChecking(false);
         return true;
       }
 
+      setIsAuthChecking(false);
       return false;
     } catch (error) {
       console.error('Error reconnecting to lobby:', error);
+      setIsAuthChecking(false);
       return false;
-    } finally {
-      setIsLoading(false);
     }
-  }, [lobbies, setCurrentLobby, setPlayers, setGameStarted, setIsLoading]);
+  }, [lobbies, setCurrentLobby, setPlayers, setGameStarted, setIsAuthChecking]);
 
   return {
     gameStarted,
     players,
     currentLobby,
     isLoading,
+    isAuthChecking,
     handleStartGame,
     deleteLobby,
     deleteAllLobbies,
