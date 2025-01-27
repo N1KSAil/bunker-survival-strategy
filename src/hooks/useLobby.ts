@@ -64,8 +64,8 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         return;
       }
 
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
         toast.error("Необходимо авторизоваться");
         return;
       }
@@ -97,19 +97,19 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
           return;
         }
 
-        const { error } = await supabase
+        const { error: joinError } = await supabase
           .from('lobby_participants')
           .insert({
-            user_id: user.data.user.id,
+            user_id: user.id,
             lobby_name: lobbyCredentials.name,
             lobby_password: lobbyCredentials.password
           });
 
-        if (error) {
-          if (error.code === '23505') {
+        if (joinError) {
+          if (joinError.code === '23505') {
             toast.error("Вы уже присоединены к лобби");
           } else {
-            console.error("Error joining lobby:", error);
+            console.error("Error joining lobby:", joinError);
             toast.error("Ошибка при присоединении к лобби");
           }
           return;
