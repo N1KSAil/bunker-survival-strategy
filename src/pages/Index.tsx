@@ -28,14 +28,18 @@ const Index = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-      
-      if (session) {
-        const reconnected = await checkAndReconnectToLobby(session.user.id);
-        if (reconnected) {
-          toast.success("Переподключение к лобби выполнено успешно");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsAuthenticated(!!session);
+        
+        if (session) {
+          const reconnected = await checkAndReconnectToLobby(session.user.id);
+          if (reconnected) {
+            toast.success("Переподключение к лобби выполнено успешно");
+          }
         }
+      } catch (error) {
+        console.error("Auth check error:", error);
       }
     };
     
@@ -62,8 +66,8 @@ const Index = () => {
     if (isAuthChecking || isLoading) {
       progressTimer = window.setInterval(() => {
         setProgress((oldProgress) => {
-          if (oldProgress >= 100) return 100;
-          return oldProgress + 2;
+          const newProgress = Math.min(oldProgress + 2, 100);
+          return newProgress;
         });
       }, 50);
     } else {
