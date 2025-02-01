@@ -27,25 +27,35 @@ const Index = () => {
   } = useLobby(playerName, INITIAL_PLAYERS);
 
   useEffect(() => {
+    let isMounted = true;
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        
         setIsAuthenticated(!!session);
         
         if (session) {
           const reconnected = await checkAndReconnectToLobby(session.user.id);
-          if (reconnected) {
+          if (reconnected && isMounted) {
             toast.success("Переподключение к лобби выполнено успешно");
           }
         }
       } catch (error) {
         console.error("Auth check error:", error);
+      } finally {
+        if (isMounted) {
+          setIsAuthChecking(false);
+        }
       }
     };
     
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+      
       const isAuthed = !!session;
       setIsAuthenticated(isAuthed);
       
@@ -56,28 +66,31 @@ const Index = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [checkAndReconnectToLobby, resetGameState]);
 
   useEffect(() => {
     let progressTimer: number | undefined;
-    let resetTimer: number | undefined;
 
     if (isAuthChecking || isLoading) {
+      setProgress(0); // Reset progress when loading starts
       progressTimer = window.setInterval(() => {
         setProgress((oldProgress) => {
-          const newProgress = Math.min(oldProgress + 2, 100);
+          const newProgress = Math.min(oldProgress + 2, 95); // Cap at 95% during loading
           return newProgress;
         });
       }, 50);
     } else {
-      setProgress(100);
-      resetTimer = window.setTimeout(() => setProgress(0), 500);
+      setProgress(100); // Set to 100% when loading is complete
     }
 
     return () => {
-      if (progressTimer) window.clearInterval(progressTimer);
-      if (resetTimer) window.clearTimeout(resetTimer);
+      if (progressTimer) {
+        window.clearInterval(progressTimer);
+      }
     };
   }, [isAuthChecking, isLoading]);
 
