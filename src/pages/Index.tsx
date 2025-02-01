@@ -37,9 +37,10 @@ const Index = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted.current) return;
         
-        setIsAuthenticated(!!session);
+        const isAuthed = !!session;
+        setIsAuthenticated(isAuthed);
         
-        if (session) {
+        if (isAuthed && session) {
           const reconnected = await checkAndReconnectToLobby(session.user.id);
           if (reconnected && isMounted.current) {
             toast.success("Переподключение к лобби выполнено успешно");
@@ -81,7 +82,7 @@ const Index = () => {
       progressTimer = window.setInterval(() => {
         setProgress((oldProgress) => {
           if (!isMounted.current) return oldProgress;
-          return Math.min(oldProgress + 2, 95);
+          return Math.min(oldProgress + 5, 95); // Увеличил скорость прогресса
         });
       }, 50);
     } else {
@@ -95,7 +96,7 @@ const Index = () => {
     };
   }, [isAuthChecking, isLoading]);
 
-  if (isAuthChecking) {
+  if (!authCheckCompleted.current) {
     return (
       <div className="min-h-screen bg-bunker-bg text-bunker-text flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md space-y-4">
