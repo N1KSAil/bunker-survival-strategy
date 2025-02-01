@@ -13,6 +13,7 @@ const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [progress, setProgress] = useState(0);
   const isMounted = useRef(true);
+  const authCheckCompleted = useRef(false);
   
   const { 
     gameStarted, 
@@ -20,7 +21,6 @@ const Index = () => {
     currentLobby,
     isLoading,
     isAuthChecking,
-    setIsAuthChecking,
     handleStartGame, 
     deleteLobby,
     deleteAllLobbies,
@@ -31,6 +31,8 @@ const Index = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      if (authCheckCompleted.current) return;
+      
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted.current) return;
@@ -47,7 +49,7 @@ const Index = () => {
         console.error("Auth check error:", error);
       } finally {
         if (isMounted.current) {
-          setIsAuthChecking(false);
+          authCheckCompleted.current = true;
         }
       }
     };
