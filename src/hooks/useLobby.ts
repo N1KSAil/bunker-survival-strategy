@@ -123,6 +123,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     currentLobby,
     isLoading,
     isAuthChecking,
+    setIsAuthChecking,
     handleStartGame,
     deleteLobby,
     deleteAllLobbies,
