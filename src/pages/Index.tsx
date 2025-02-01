@@ -6,12 +6,13 @@ import { INITIAL_PLAYERS } from "@/data/initialPlayers";
 import AuthForm from "@/components/AuthForm";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress";
+import LoadingScreen from "@/components/LoadingScreen";
+import MainContainer from "@/components/MainContainer";
+import { useProgress } from "@/hooks/useProgress";
 
 const Index = () => {
   const [playerName, setPlayerName] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [progress, setProgress] = useState(0);
   const isMounted = useRef(true);
   const authCheckCompleted = useRef(false);
   
@@ -28,6 +29,8 @@ const Index = () => {
     checkAndReconnectToLobby,
     resetGameState
   } = useLobby(playerName, INITIAL_PLAYERS);
+
+  const progress = useProgress(isLoading, isAuthChecking);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -74,82 +77,42 @@ const Index = () => {
     };
   }, [checkAndReconnectToLobby, resetGameState]);
 
-  useEffect(() => {
-    let progressTimer: number | undefined;
-
-    if (isAuthChecking || isLoading) {
-      setProgress(0);
-      progressTimer = window.setInterval(() => {
-        setProgress((oldProgress) => {
-          if (!isMounted.current) return oldProgress;
-          return Math.min(oldProgress + 5, 95); // Увеличил скорость прогресса
-        });
-      }, 50);
-    } else {
-      setProgress(100);
-    }
-
-    return () => {
-      if (progressTimer) {
-        window.clearInterval(progressTimer);
-      }
-    };
-  }, [isAuthChecking, isLoading]);
-
   if (!authCheckCompleted.current) {
-    return (
-      <div className="min-h-screen bg-bunker-bg text-bunker-text flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-4">
-          <p className="text-center mb-4">Проверка авторизации...</p>
-          <Progress value={progress} className="w-full" />
-        </div>
-      </div>
-    );
+    return <LoadingScreen progress={progress} />;
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-bunker-bg text-bunker-text">
-        <div className="container mx-auto p-4 max-w-md">
-          <h1 className="text-2xl font-bold mb-6 text-center">Добро пожаловать</h1>
-          <AuthForm onSuccess={() => setIsAuthenticated(true)} />
-        </div>
-      </div>
+      <MainContainer>
+        <h1 className="text-2xl font-bold mb-6 text-center">Добро пожаловать</h1>
+        <AuthForm onSuccess={() => setIsAuthenticated(true)} />
+      </MainContainer>
     );
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-bunker-bg text-bunker-text flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-4">
-          <p className="text-center mb-4">Загрузка...</p>
-          <Progress value={progress} className="w-full" />
-        </div>
-      </div>
-    );
+    return <LoadingScreen progress={progress} />;
   }
 
   return (
-    <div className="min-h-screen bg-bunker-bg text-bunker-text">
-      <div className="container mx-auto p-4 space-y-6">
-        {!gameStarted ? (
-          <StartScreen
-            playerName={playerName}
-            onPlayerNameChange={setPlayerName}
-            onStartGame={handleStartGame}
-          />
-        ) : (
-          <GameLayout
-            players={players}
-            playerName={playerName}
-            currentLobby={currentLobby}
-            getCurrentPlayerData={getCurrentPlayerData}
-            onDeleteLobby={deleteLobby}
-            onDeleteAllLobbies={deleteAllLobbies}
-          />
-        )}
-      </div>
-    </div>
+    <MainContainer>
+      {!gameStarted ? (
+        <StartScreen
+          playerName={playerName}
+          onPlayerNameChange={setPlayerName}
+          onStartGame={handleStartGame}
+        />
+      ) : (
+        <GameLayout
+          players={players}
+          playerName={playerName}
+          currentLobby={currentLobby}
+          getCurrentPlayerData={getCurrentPlayerData}
+          onDeleteLobby={deleteLobby}
+          onDeleteAllLobbies={deleteAllLobbies}
+        />
+      )}
+    </MainContainer>
   );
 };
 
