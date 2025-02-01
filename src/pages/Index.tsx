@@ -18,6 +18,7 @@ const Index = () => {
     currentLobby,
     isLoading,
     isAuthChecking,
+    setIsAuthChecking,
     handleStartGame, 
     deleteLobby,
     deleteAllLobbies,
