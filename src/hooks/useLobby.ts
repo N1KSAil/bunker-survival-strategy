@@ -79,7 +79,11 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   };
 
   const checkAndReconnectToLobby = useCallback(async (userId: string) => {
+    console.log('Starting lobby reconnection check for user:', userId);
+    console.time('Lobby Participant Check');
+    
     if (!userId) {
+      console.log('No user ID provided, skipping reconnection');
       setIsAuthChecking(false);
       return false;
     }
@@ -90,17 +94,26 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
+      
+      console.timeEnd('Lobby Participant Check');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching lobby participant:', error);
+        throw error;
+      }
+      
       if (!participantData) {
+        console.log('No active lobby participation found');
         setIsAuthChecking(false);
         return false;
       }
 
+      console.log('Found lobby participation:', participantData);
       const { lobby_name, lobby_password } = participantData;
       const lobby = lobbies.get(lobby_name);
 
       if (lobby) {
+        console.log('Reconnecting to lobby:', lobby_name);
         setCurrentLobby({ name: lobby_name, password: lobby_password });
         setPlayers(lobby.players);
         setGameStarted(true);
@@ -108,6 +121,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         return true;
       }
 
+      console.log('Lobby not found in memory');
       setIsAuthChecking(false);
       return false;
     } catch (error) {

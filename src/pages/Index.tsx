@@ -37,15 +37,26 @@ const Index = () => {
     const checkAuth = async () => {
       if (authCheckCompleted.current) return;
       
+      console.time('Total Auth Check');
+      console.log('Starting auth check...');
+      
       try {
+        console.time('Get Session');
         const { data: { session } } = await supabase.auth.getSession();
+        console.timeEnd('Get Session');
+        
         if (!isMounted.current) return;
         
         const isAuthed = !!session;
+        console.log('Authentication status:', isAuthed);
         setIsAuthenticated(isAuthed);
         
         if (isAuthed && session) {
+          console.time('Reconnect to Lobby');
           const reconnected = await checkAndReconnectToLobby(session.user.id);
+          console.timeEnd('Reconnect to Lobby');
+          console.log('Lobby reconnection status:', reconnected);
+          
           if (reconnected && isMounted.current) {
             toast.success("Переподключение к лобби выполнено успешно");
           }
@@ -57,8 +68,10 @@ const Index = () => {
         }
       } finally {
         if (isMounted.current) {
+          console.log('Completing auth check...');
           authCheckCompleted.current = true;
-          setIsAuthChecking(false); // Важно установить в false после завершения проверки
+          setIsAuthChecking(false);
+          console.timeEnd('Total Auth Check');
         }
       }
     };
@@ -68,6 +81,7 @@ const Index = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted.current) return;
       
+      console.log('Auth state changed:', !!session);
       setIsAuthenticated(!!session);
       
       if (!session) {
