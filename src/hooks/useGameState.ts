@@ -6,14 +6,14 @@ export const useGameState = () => {
   const [players, setPlayers] = useState<PlayerCharacteristics[]>([]);
   const [currentLobby, setCurrentLobby] = useState<LobbyCredentials | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthChecking, setIsAuthChecking] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true); // Начинаем с true
 
   const resetGameState = () => {
     setGameStarted(false);
     setCurrentLobby(null);
     setPlayers([]);
     setIsLoading(false);
-    setIsAuthChecking(false);
+    setIsAuthChecking(false); // Важно сбросить это состояние при сбросе
   };
 
   return {

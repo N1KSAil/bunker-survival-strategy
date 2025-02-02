@@ -22,6 +22,7 @@ const Index = () => {
     currentLobby,
     isLoading,
     isAuthChecking,
+    setIsAuthChecking,
     handleStartGame, 
     deleteLobby,
     deleteAllLobbies,
@@ -57,6 +58,7 @@ const Index = () => {
       } finally {
         if (isMounted.current) {
           authCheckCompleted.current = true;
+          setIsAuthChecking(false); // Важно установить в false после завершения проверки
         }
       }
     };
@@ -77,8 +79,9 @@ const Index = () => {
       isMounted.current = false;
       subscription.unsubscribe();
     };
-  }, [checkAndReconnectToLobby, resetGameState]);
+  }, [checkAndReconnectToLobby, resetGameState, setIsAuthChecking]);
 
+  // Показываем LoadingScreen только во время первичной проверки авторизации
   if (!authCheckCompleted.current) {
     return <LoadingScreen progress={progress} />;
   }
