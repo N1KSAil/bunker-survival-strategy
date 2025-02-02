@@ -51,6 +51,9 @@ const Index = () => {
         }
       } catch (error) {
         console.error("Auth check error:", error);
+        if (isMounted.current) {
+          toast.error("Ошибка при проверке авторизации");
+        }
       } finally {
         if (isMounted.current) {
           authCheckCompleted.current = true;
