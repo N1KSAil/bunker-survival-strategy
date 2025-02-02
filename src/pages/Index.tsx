@@ -63,10 +63,9 @@ const Index = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted.current) return;
       
-      const isAuthed = !!session;
-      setIsAuthenticated(isAuthed);
+      setIsAuthenticated(!!session);
       
-      if (!isAuthed) {
+      if (!session) {
         resetGameState();
       }
     });

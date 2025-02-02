@@ -12,7 +12,7 @@ export const useProgress = (isLoading: boolean, isAuthChecking: boolean) => {
       progressTimer = window.setInterval(() => {
         setProgress((oldProgress) => {
           if (!isMounted.current) return oldProgress;
-          return Math.min(oldProgress + 5, 95);
+          return Math.min(oldProgress + 10, 95); // Увеличиваем скорость прогресса
         });
       }, 50);
     } else {
