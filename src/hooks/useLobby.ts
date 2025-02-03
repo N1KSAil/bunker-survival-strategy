@@ -39,6 +39,12 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       setIsLoading(true);
       const { name, password } = lobbyCredentials;
 
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        toast.error("Пожалуйста, войдите в систему");
+        return;
+      }
+
       if (isCreating) {
         const newPlayer = {
           ...initialPlayers[0],
@@ -73,7 +79,8 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       setGameStarted(true);
       toast.success(isCreating ? "Лобби создано!" : "Вы присоединились к лобби!");
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Game start error:", error);
+      toast.error(error.message || "Ошибка при входе в лобби");
     } finally {
       setIsLoading(false);
     }
@@ -131,13 +138,12 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         retryCount++;
         
         if (retryCount === maxRetries) {
-          console.error('Max retries reached, giving up');
+          console.error('Max retries reached');
           toast.error("Не удалось подключиться к лобби. Попробуйте позже.");
           setIsAuthChecking(false);
           return false;
         }
         
-        // Wait before retrying (exponential backoff)
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
       }
     }
