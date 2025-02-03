@@ -5,18 +5,14 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
+    persistSession: true,
     detectSessionInUrl: true,
-    storageKey: 'supabase.auth.token',
-    flowType: 'pkce',
+    flowType: 'pkce'
   },
   global: {
     headers: {
-      'X-Client-Info': 'supabase-js-web/2.1.0',
+      'X-Client-Info': 'supabase-js-web/2.38.4',
     },
   },
-  db: {
-    schema: 'public'
-  }
 });
