@@ -85,50 +85,65 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       return false;
     }
 
-    try {
-      const { data: participantData, error } = await supabase
-        .from('lobby_participants')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
+    const maxRetries = 3;
+    let retryCount = 0;
 
-      if (error) {
-        console.error('Error fetching lobby participant:', error);
-        throw error;
-      }
-      
-      if (!participantData) {
+    while (retryCount < maxRetries) {
+      try {
+        const { data: participantData, error } = await supabase
+          .from('lobby_participants')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching lobby participant:', error);
+          throw error;
+        }
+        
+        if (!participantData) {
+          setIsAuthChecking(false);
+          return false;
+        }
+
+        const { lobby_name, lobby_password } = participantData;
+        
+        await loadLobbiesFromStorage();
+        const lobby = lobbies.get(lobby_name);
+
+        if (lobby) {
+          setCurrentLobby({ name: lobby_name, password: lobby_password });
+          setPlayers(lobby.players);
+          setGameStarted(true);
+          setIsAuthChecking(false);
+          return true;
+        }
+
+        await supabase
+          .from('lobby_participants')
+          .delete()
+          .eq('user_id', userId);
+
         setIsAuthChecking(false);
         return false;
+      } catch (error) {
+        console.error(`Attempt ${retryCount + 1} failed:`, error);
+        retryCount++;
+        
+        if (retryCount === maxRetries) {
+          console.error('Max retries reached, giving up');
+          toast.error("Не удалось подключиться к лобби. Попробуйте позже.");
+          setIsAuthChecking(false);
+          return false;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
       }
-
-      const { lobby_name, lobby_password } = participantData;
-      
-      // Перезагружаем лобби из хранилища перед проверкой
-      await loadLobbiesFromStorage();
-      const lobby = lobbies.get(lobby_name);
-
-      if (lobby) {
-        setCurrentLobby({ name: lobby_name, password: lobby_password });
-        setPlayers(lobby.players);
-        setGameStarted(true);
-        setIsAuthChecking(false);
-        return true;
-      }
-
-      // Если лобби не найдено в памяти, удаляем запись об участии
-      await supabase
-        .from('lobby_participants')
-        .delete()
-        .eq('user_id', userId);
-
-      setIsAuthChecking(false);
-      return false;
-    } catch (error) {
-      console.error('Error reconnecting to lobby:', error);
-      setIsAuthChecking(false);
-      return false;
     }
+
+    setIsAuthChecking(false);
+    return false;
   }, [lobbies, setCurrentLobby, setPlayers, setGameStarted, setIsAuthChecking, loadLobbiesFromStorage]);
 
   return {
