@@ -15,8 +15,6 @@ const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const isMounted = useRef(true);
   const authCheckCompleted = useRef(false);
-  const authCheckInProgress = useRef(false);
-  const timersStarted = useRef<Set<string>>(new Set());
   
   const { 
     gameStarted, 
@@ -35,74 +33,36 @@ const Index = () => {
 
   const progress = useProgress(isLoading, isAuthChecking);
 
-  const startTimer = (name: string) => {
-    if (!timersStarted.current.has(name)) {
-      console.time(name);
-      timersStarted.current.add(name);
-    }
-  };
-
-  const endTimer = (name: string) => {
-    if (timersStarted.current.has(name)) {
-      console.timeEnd(name);
-      timersStarted.current.delete(name);
-    }
-  };
-
-  const clearAllTimers = () => {
-    timersStarted.current.forEach(timerName => {
-      try {
-        console.timeEnd(timerName);
-      } catch (e) {
-        // Игнорируем ошибки при очистке таймеров
-      }
-    });
-    timersStarted.current.clear();
-  };
-
   useEffect(() => {
+    let ignore = false;
+
     const checkAuth = async () => {
-      if (authCheckCompleted.current || authCheckInProgress.current) return;
-      
-      authCheckInProgress.current = true;
-      clearAllTimers();
-      
-      startTimer('Total Auth Check');
-      console.log('Starting auth check...');
+      if (authCheckCompleted.current) return;
       
       try {
-        startTimer('Get Session');
         const { data: { session } } = await supabase.auth.getSession();
-        endTimer('Get Session');
         
-        if (!isMounted.current) return;
+        if (ignore) return;
         
         const isAuthed = !!session;
-        console.log('Authentication status:', isAuthed);
         setIsAuthenticated(isAuthed);
         
         if (isAuthed && session) {
-          startTimer('Reconnect to Lobby');
           const reconnected = await checkAndReconnectToLobby(session.user.id);
-          endTimer('Reconnect to Lobby');
-          console.log('Lobby reconnection status:', reconnected);
           
-          if (reconnected && isMounted.current) {
+          if (!ignore && reconnected) {
             toast.success("Переподключение к лобби выполнено успешно");
           }
         }
       } catch (error) {
         console.error("Auth check error:", error);
-        if (isMounted.current) {
+        if (!ignore) {
           toast.error("Ошибка при проверке авторизации");
         }
       } finally {
-        if (isMounted.current) {
-          console.log('Completing auth check...');
+        if (!ignore) {
           authCheckCompleted.current = true;
-          authCheckInProgress.current = false;
           setIsAuthChecking(false);
-          endTimer('Total Auth Check');
         }
       }
     };
@@ -110,9 +70,8 @@ const Index = () => {
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted.current) return;
+      if (ignore) return;
       
-      console.log('Auth state changed:', !!session);
       setIsAuthenticated(!!session);
       
       if (!session) {
@@ -121,9 +80,9 @@ const Index = () => {
     });
 
     return () => {
+      ignore = true;
       isMounted.current = false;
       subscription.unsubscribe();
-      clearAllTimers();
     };
   }, [checkAndReconnectToLobby, resetGameState, setIsAuthChecking]);
 
