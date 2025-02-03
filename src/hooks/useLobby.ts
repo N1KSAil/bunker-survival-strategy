@@ -26,7 +26,8 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
     checkLobbyPassword,
     createLobby,
     deleteLobby,
-    deleteAllLobbies
+    deleteAllLobbies,
+    loadLobbiesFromStorage
   } = useLobbyManagement();
 
   const getCurrentPlayerData = useCallback(() => {
@@ -79,11 +80,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
   };
 
   const checkAndReconnectToLobby = useCallback(async (userId: string) => {
-    console.log('Starting lobby reconnection check for user:', userId);
-    console.time('Lobby Participant Check');
-    
     if (!userId) {
-      console.log('No user ID provided, skipping reconnection');
       setIsAuthChecking(false);
       return false;
     }
@@ -94,8 +91,6 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
-      
-      console.timeEnd('Lobby Participant Check');
 
       if (error) {
         console.error('Error fetching lobby participant:', error);
@@ -103,17 +98,17 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       }
       
       if (!participantData) {
-        console.log('No active lobby participation found');
         setIsAuthChecking(false);
         return false;
       }
 
-      console.log('Found lobby participation:', participantData);
       const { lobby_name, lobby_password } = participantData;
+      
+      // Перезагружаем лобби из хранилища перед проверкой
+      await loadLobbiesFromStorage();
       const lobby = lobbies.get(lobby_name);
 
       if (lobby) {
-        console.log('Reconnecting to lobby:', lobby_name);
         setCurrentLobby({ name: lobby_name, password: lobby_password });
         setPlayers(lobby.players);
         setGameStarted(true);
@@ -121,7 +116,12 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         return true;
       }
 
-      console.log('Lobby not found in memory');
+      // Если лобби не найдено в памяти, удаляем запись об участии
+      await supabase
+        .from('lobby_participants')
+        .delete()
+        .eq('user_id', userId);
+
       setIsAuthChecking(false);
       return false;
     } catch (error) {
@@ -129,7 +129,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       setIsAuthChecking(false);
       return false;
     }
-  }, [lobbies, setCurrentLobby, setPlayers, setGameStarted, setIsAuthChecking]);
+  }, [lobbies, setCurrentLobby, setPlayers, setGameStarted, setIsAuthChecking, loadLobbiesFromStorage]);
 
   return {
     gameStarted,

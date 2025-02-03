@@ -7,6 +7,12 @@ import { PlayerCharacteristics } from "@/types/game";
 export const useLobbyManagement = () => {
   const [lobbies, setLobbies] = useState<Map<string, LobbyData>>(getLobbiesFromStorage());
 
+  const loadLobbiesFromStorage = async () => {
+    const loadedLobbies = getLobbiesFromStorage();
+    setLobbies(loadedLobbies);
+    return loadedLobbies;
+  };
+
   const checkLobbyExists = (name: string): boolean => {
     return lobbies.has(name);
   };
@@ -95,5 +101,6 @@ export const useLobbyManagement = () => {
     createLobby,
     deleteLobby,
     deleteAllLobbies,
+    loadLobbiesFromStorage
   };
 };
