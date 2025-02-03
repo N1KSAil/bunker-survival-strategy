@@ -16,7 +16,7 @@ const Index = () => {
   const isMounted = useRef(true);
   const authCheckCompleted = useRef(false);
   const authCheckInProgress = useRef(false);
-  const timersCleared = useRef(false);
+  const timersStarted = useRef<Set<string>>(new Set());
   
   const { 
     gameStarted, 
@@ -35,29 +35,45 @@ const Index = () => {
 
   const progress = useProgress(isLoading, isAuthChecking);
 
-  useEffect(() => {
-    const clearExistingTimers = () => {
-      if (!timersCleared.current) {
-        console.timeEnd('Total Auth Check');
-        console.timeEnd('Get Session');
-        console.timeEnd('Reconnect to Lobby');
-        timersCleared.current = true;
-      }
-    };
+  const startTimer = (name: string) => {
+    if (!timersStarted.current.has(name)) {
+      console.time(name);
+      timersStarted.current.add(name);
+    }
+  };
 
+  const endTimer = (name: string) => {
+    if (timersStarted.current.has(name)) {
+      console.timeEnd(name);
+      timersStarted.current.delete(name);
+    }
+  };
+
+  const clearAllTimers = () => {
+    timersStarted.current.forEach(timerName => {
+      try {
+        console.timeEnd(timerName);
+      } catch (e) {
+        // Игнорируем ошибки при очистке таймеров
+      }
+    });
+    timersStarted.current.clear();
+  };
+
+  useEffect(() => {
     const checkAuth = async () => {
       if (authCheckCompleted.current || authCheckInProgress.current) return;
       
       authCheckInProgress.current = true;
-      clearExistingTimers();
+      clearAllTimers();
       
-      console.time('Total Auth Check');
+      startTimer('Total Auth Check');
       console.log('Starting auth check...');
       
       try {
-        console.time('Get Session');
+        startTimer('Get Session');
         const { data: { session } } = await supabase.auth.getSession();
-        console.timeEnd('Get Session');
+        endTimer('Get Session');
         
         if (!isMounted.current) return;
         
@@ -66,9 +82,9 @@ const Index = () => {
         setIsAuthenticated(isAuthed);
         
         if (isAuthed && session) {
-          console.time('Reconnect to Lobby');
+          startTimer('Reconnect to Lobby');
           const reconnected = await checkAndReconnectToLobby(session.user.id);
-          console.timeEnd('Reconnect to Lobby');
+          endTimer('Reconnect to Lobby');
           console.log('Lobby reconnection status:', reconnected);
           
           if (reconnected && isMounted.current) {
@@ -86,7 +102,7 @@ const Index = () => {
           authCheckCompleted.current = true;
           authCheckInProgress.current = false;
           setIsAuthChecking(false);
-          console.timeEnd('Total Auth Check');
+          endTimer('Total Auth Check');
         }
       }
     };
@@ -107,11 +123,10 @@ const Index = () => {
     return () => {
       isMounted.current = false;
       subscription.unsubscribe();
-      clearExistingTimers();
+      clearAllTimers();
     };
   }, [checkAndReconnectToLobby, resetGameState, setIsAuthChecking]);
 
-  // Показываем LoadingScreen только во время первичной проверки авторизации
   if (!authCheckCompleted.current) {
     return <LoadingScreen progress={progress} />;
   }
