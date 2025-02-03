@@ -9,11 +9,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'supabase.auth.token',
+    flowType: 'pkce',
   },
   global: {
     headers: {
-      'X-Client-Info': 'supabase-js-web'
-    }
+      'X-Client-Info': 'supabase-js-web/2.1.0',
+    },
   },
   db: {
     schema: 'public'
