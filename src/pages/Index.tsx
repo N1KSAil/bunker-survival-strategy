@@ -15,6 +15,8 @@ const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const isMounted = useRef(true);
   const authCheckCompleted = useRef(false);
+  const authCheckInProgress = useRef(false);
+  const timersCleared = useRef(false);
   
   const { 
     gameStarted, 
@@ -34,8 +36,20 @@ const Index = () => {
   const progress = useProgress(isLoading, isAuthChecking);
 
   useEffect(() => {
+    const clearExistingTimers = () => {
+      if (!timersCleared.current) {
+        console.timeEnd('Total Auth Check');
+        console.timeEnd('Get Session');
+        console.timeEnd('Reconnect to Lobby');
+        timersCleared.current = true;
+      }
+    };
+
     const checkAuth = async () => {
-      if (authCheckCompleted.current) return;
+      if (authCheckCompleted.current || authCheckInProgress.current) return;
+      
+      authCheckInProgress.current = true;
+      clearExistingTimers();
       
       console.time('Total Auth Check');
       console.log('Starting auth check...');
@@ -70,6 +84,7 @@ const Index = () => {
         if (isMounted.current) {
           console.log('Completing auth check...');
           authCheckCompleted.current = true;
+          authCheckInProgress.current = false;
           setIsAuthChecking(false);
           console.timeEnd('Total Auth Check');
         }
@@ -92,6 +107,7 @@ const Index = () => {
     return () => {
       isMounted.current = false;
       subscription.unsubscribe();
+      clearExistingTimers();
     };
   }, [checkAndReconnectToLobby, resetGameState, setIsAuthChecking]);
 
