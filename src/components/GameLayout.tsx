@@ -11,6 +11,7 @@ interface GameLayoutProps {
   getCurrentPlayerData: () => PlayerCharacteristics | undefined;
   onDeleteLobby?: (name: string, password: string) => void;
   onDeleteAllLobbies?: () => void;
+  resetGameState: () => void;
 }
 
 const GameLayout = ({ 
@@ -19,13 +20,26 @@ const GameLayout = ({
   currentLobby, 
   getCurrentPlayerData,
   onDeleteLobby,
-  onDeleteAllLobbies
+  onDeleteAllLobbies,
+  resetGameState
 }: GameLayoutProps) => {
   const isCreator = players[0]?.name === playerName;
 
-  const handleDeleteLobby = () => {
+  const handleDeleteLobby = async () => {
     if (currentLobby && onDeleteLobby) {
-      onDeleteLobby(currentLobby.name, currentLobby.password);
+      const success = await onDeleteLobby(currentLobby.name, currentLobby.password);
+      if (success) {
+        resetGameState();
+      }
+    }
+  };
+
+  const handleDeleteAllLobbies = async () => {
+    if (onDeleteAllLobbies) {
+      const success = await onDeleteAllLobbies();
+      if (success) {
+        resetGameState();
+      }
     }
   };
 
@@ -54,7 +68,7 @@ const GameLayout = ({
             {isCreator && (
               <Button 
                 variant="destructive"
-                onClick={onDeleteAllLobbies}
+                onClick={handleDeleteAllLobbies}
                 className="bg-red-800 hover:bg-red-900"
               >
                 Удалить все лобби

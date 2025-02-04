@@ -101,6 +101,7 @@ const Index = () => {
           getCurrentPlayerData={getCurrentPlayerData}
           onDeleteLobby={deleteLobby}
           onDeleteAllLobbies={deleteAllLobbies}
+          resetGameState={resetGameState}
         />
       )}
     </MainContainer>
