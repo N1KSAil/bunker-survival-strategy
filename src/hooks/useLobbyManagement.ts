@@ -45,13 +45,14 @@ export const useLobbyManagement = () => {
       .from('lobby_participants')
       .select('lobby_name')
       .eq('lobby_name', name)
-      .single();
+      .maybeSingle();
 
     if (error) {
+      console.error("Error checking lobby existence:", error);
       return false;
     }
 
-    return !!data;
+    return data !== null;
   };
 
   const checkLobbyPassword = (name: string, password: string): boolean => {
