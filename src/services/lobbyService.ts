@@ -5,18 +5,23 @@ import { PlayerCharacteristics } from "@/types/game";
 import { toast } from "sonner";
 
 export const checkLobbyExists = async (name: string): Promise<boolean> => {
-  const { data, error } = await supabase
-    .from('lobby_participants')
-    .select('lobby_name')
-    .eq('lobby_name', name)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from('lobby_participants')
+      .select('lobby_name')
+      .eq('lobby_name', name)
+      .maybeSingle();
 
-  if (error) {
+    if (error) {
+      console.error("Ошибка при проверке существования лобби:", error);
+      return false;
+    }
+
+    return data !== null;
+  } catch (error) {
     console.error("Ошибка при проверке существования лобби:", error);
     return false;
   }
-
-  return data !== null;
 };
 
 export const checkLobbyPassword = (name: string, password: string): boolean => {
@@ -54,45 +59,60 @@ export const createLobby = async (
 };
 
 export const deleteLobby = async (name: string, password: string): Promise<boolean> => {
-  const exists = await checkLobbyExists(name);
-  if (!exists) {
-    throw new Error("Лобби не существует");
-  }
-  
-  if (!checkLobbyPassword(name, password)) {
-    throw new Error("Неверный пароль");
-  }
+  try {
+    const exists = await checkLobbyExists(name);
+    if (!exists) {
+      toast.error("Лобби не найдено");
+      return false;
+    }
 
-  const { error } = await supabase
-    .from('lobby_participants')
-    .delete()
-    .eq('lobby_name', name);
+    if (!checkLobbyPassword(name, password)) {
+      toast.error("Неверный пароль лобби");
+      return false;
+    }
 
-  if (error) {
+    const { error } = await supabase
+      .from('lobby_participants')
+      .delete()
+      .eq('lobby_name', name);
+
+    if (error) {
+      console.error("Ошибка при удалении лобби:", error);
+      toast.error("Ошибка при удалении лобби");
+      return false;
+    }
+
+    lobbyStorage.delete(name);
+    toast.success("Лобби успешно удалено");
+    return true;
+  } catch (error) {
     console.error("Ошибка при удалении лобби:", error);
-    throw new Error("Ошибка при удалении лобби");
+    toast.error("Произошла ошибка при удалении лобби");
+    return false;
   }
-
-  lobbyStorage.delete(name);
-  toast.success(`Лобби ${name} удалено`);
-  
-  return true;
 };
 
 export const deleteAllLobbies = async (): Promise<boolean> => {
-  const { error } = await supabase
-    .from('lobby_participants')
-    .delete()
-    .not('id', 'is', null);
+  try {
+    const { error } = await supabase
+      .from('lobby_participants')
+      .delete()
+      .not('id', 'is', null);
 
-  if (error) {
+    if (error) {
+      console.error("Ошибка при удалении всех лобби:", error);
+      toast.error("Ошибка при удалении всех лобби");
+      return false;
+    }
+
+    lobbyStorage.clear();
+    toast.success("Все лобби успешно удалены");
+    return true;
+  } catch (error) {
     console.error("Ошибка при удалении всех лобби:", error);
-    throw new Error("Ошибка при удалении всех лобби");
+    toast.error("Произошла ошибка при удалении всех лобби");
+    return false;
   }
-
-  lobbyStorage.clear();
-  toast.success('Все лобби удалены');
-  return true;
 };
 
 export const loadLobbiesFromStorage = async (): Promise<Map<string, LobbyData>> => {
@@ -102,18 +122,19 @@ export const loadLobbiesFromStorage = async (): Promise<Map<string, LobbyData>> 
       .select('*');
 
     if (error) {
-      console.error("Ошибка при загрузке лобби из Supabase:", error);
-      throw error;
+      console.error("Ошибка при загрузке лобби из базы данных:", error);
+      return new Map();
     }
 
+    const lobbies = new Map<string, LobbyData>();
     supabaseLobbies.forEach(lobby => {
-      lobbyStorage.set(lobby.lobby_name, {
+      lobbies.set(lobby.lobby_name, {
         password: lobby.lobby_password,
         players: []
       });
     });
 
-    return lobbyStorage.getAll();
+    return lobbies;
   } catch (error) {
     console.error("Ошибка в loadLobbiesFromStorage:", error);
     return new Map();
