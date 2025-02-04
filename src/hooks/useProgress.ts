@@ -14,7 +14,7 @@ export const useProgress = (isLoading: boolean, isAuthChecking: boolean) => {
       progressTimer.current = window.setInterval(() => {
         if (!isMounted.current) return;
         setProgress((oldProgress) => {
-          const newProgress = Math.min(oldProgress + 20, 95); // Увеличиваем скорость в 2 раза
+          const newProgress = Math.min(oldProgress + 40, 95); // Увеличиваем скорость в 4 раза
           if (newProgress === 95) {
             if (progressTimer.current) {
               window.clearInterval(progressTimer.current);
@@ -22,7 +22,7 @@ export const useProgress = (isLoading: boolean, isAuthChecking: boolean) => {
           }
           return newProgress;
         });
-      }, 25); // Уменьшаем интервал в 2 раза
+      }, 10); // Уменьшаем интервал в 5 раз
     } else {
       if (progressTimer.current) {
         window.clearInterval(progressTimer.current);
