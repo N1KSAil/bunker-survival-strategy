@@ -68,6 +68,28 @@ const Index = () => {
     };
   }, [checkAndReconnectToLobby, resetGameState, setIsAuthChecking]);
 
+  const handleDeleteLobby = async (name: string, password: string): Promise<boolean> => {
+    try {
+      await deleteLobby(name, password);
+      resetGameState();
+      return true;
+    } catch (error) {
+      console.error("Error deleting lobby:", error);
+      return false;
+    }
+  };
+
+  const handleDeleteAllLobbies = async (): Promise<boolean> => {
+    try {
+      await deleteAllLobbies();
+      resetGameState();
+      return true;
+    } catch (error) {
+      console.error("Error deleting all lobbies:", error);
+      return false;
+    }
+  };
+
   if (isAuthChecking) {
     return <LoadingScreen progress={progress} />;
   }
@@ -99,8 +121,8 @@ const Index = () => {
           playerName={playerName}
           currentLobby={currentLobby}
           getCurrentPlayerData={getCurrentPlayerData}
-          onDeleteLobby={deleteLobby}
-          onDeleteAllLobbies={deleteAllLobbies}
+          onDeleteLobby={handleDeleteLobby}
+          onDeleteAllLobbies={handleDeleteAllLobbies}
           resetGameState={resetGameState}
         />
       )}
