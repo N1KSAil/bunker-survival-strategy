@@ -9,8 +9,8 @@ interface GameLayoutProps {
   playerName: string;
   currentLobby: LobbyCredentials | null;
   getCurrentPlayerData: () => PlayerCharacteristics | undefined;
-  onDeleteLobby?: (name: string, password: string) => void;
-  onDeleteAllLobbies?: () => void;
+  onDeleteLobby?: (name: string, password: string) => Promise<boolean>;
+  onDeleteAllLobbies?: () => Promise<boolean>;
   resetGameState: () => void;
 }
 
