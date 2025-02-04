@@ -13,8 +13,7 @@ import { useProgress } from "@/hooks/useProgress";
 const Index = () => {
   const [playerName, setPlayerName] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const isMounted = useRef(true);
-  const authCheckCompleted = useRef(false);
+  const authCheckRef = useRef<boolean>(false);
   
   const { 
     gameStarted, 
@@ -37,7 +36,8 @@ const Index = () => {
     let ignore = false;
 
     const checkAuth = async () => {
-      if (authCheckCompleted.current) return;
+      if (authCheckRef.current) return;
+      authCheckRef.current = true;
       
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -61,7 +61,6 @@ const Index = () => {
         }
       } finally {
         if (!ignore) {
-          authCheckCompleted.current = true;
           setIsAuthChecking(false);
         }
       }
@@ -69,7 +68,7 @@ const Index = () => {
     
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (ignore) return;
       
       setIsAuthenticated(!!session);
@@ -81,12 +80,11 @@ const Index = () => {
 
     return () => {
       ignore = true;
-      isMounted.current = false;
       subscription.unsubscribe();
     };
   }, [checkAndReconnectToLobby, resetGameState, setIsAuthChecking]);
 
-  if (!authCheckCompleted.current) {
+  if (isAuthChecking) {
     return <LoadingScreen progress={progress} />;
   }
 
