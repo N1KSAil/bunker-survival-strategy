@@ -8,13 +8,50 @@ export const useLobbyManagement = () => {
   const [lobbies, setLobbies] = useState<Map<string, LobbyData>>(getLobbiesFromStorage());
 
   const loadLobbiesFromStorage = async () => {
-    const loadedLobbies = getLobbiesFromStorage();
-    setLobbies(loadedLobbies);
-    return loadedLobbies;
+    try {
+      // First, get lobbies from Supabase
+      const { data: supabaseLobbies, error } = await supabase
+        .from('lobby_participants')
+        .select('*');
+
+      if (error) {
+        console.error("Error loading lobbies from Supabase:", error);
+        throw error;
+      }
+
+      // Convert Supabase data to our lobby format
+      const loadedLobbies = new Map<string, LobbyData>();
+      supabaseLobbies.forEach(lobby => {
+        loadedLobbies.set(lobby.lobby_name, {
+          password: lobby.lobby_password,
+          players: [] // We'll need to implement player loading separately
+        });
+      });
+
+      // Update local storage with Supabase data
+      saveLobbiesToStorage(loadedLobbies);
+      setLobbies(loadedLobbies);
+      return loadedLobbies;
+    } catch (error) {
+      console.error("Error in loadLobbiesFromStorage:", error);
+      const localLobbies = getLobbiesFromStorage();
+      setLobbies(localLobbies);
+      return localLobbies;
+    }
   };
 
-  const checkLobbyExists = (name: string): boolean => {
-    return lobbies.has(name);
+  const checkLobbyExists = async (name: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('lobby_participants')
+      .select('lobby_name')
+      .eq('lobby_name', name)
+      .single();
+
+    if (error) {
+      return false;
+    }
+
+    return !!data;
   };
 
   const checkLobbyPassword = (name: string, password: string): boolean => {
@@ -23,7 +60,8 @@ export const useLobbyManagement = () => {
   };
 
   const createLobby = async (name: string, password: string, firstPlayer: PlayerCharacteristics) => {
-    if (checkLobbyExists(name)) {
+    const exists = await checkLobbyExists(name);
+    if (exists) {
       throw new Error("Лобби с таким названием уже существует");
     }
     
@@ -50,7 +88,8 @@ export const useLobbyManagement = () => {
   };
 
   const deleteLobby = async (name: string, password: string) => {
-    if (!checkLobbyExists(name)) {
+    const exists = await checkLobbyExists(name);
+    if (!exists) {
       throw new Error("Лобби не существует");
     }
     
