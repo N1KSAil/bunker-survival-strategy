@@ -13,7 +13,7 @@ import { useProgress } from "@/hooks/useProgress";
 const Index = () => {
   const [playerName, setPlayerName] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const authCheckRef = useRef<boolean>(false);
+  const authCheckRef = useRef(false);
   
   const { 
     gameStarted, 
@@ -33,44 +33,29 @@ const Index = () => {
   const progress = useProgress(isLoading, isAuthChecking);
 
   useEffect(() => {
-    let ignore = false;
-
     const checkAuth = async () => {
       if (authCheckRef.current) return;
       authCheckRef.current = true;
       
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
-        if (ignore) return;
-        
         const isAuthed = !!session;
         setIsAuthenticated(isAuthed);
         
         if (isAuthed && session) {
-          const reconnected = await checkAndReconnectToLobby(session.user.id);
-          
-          if (!ignore && reconnected) {
-            toast.success("Переподключение к лобби выполнено успешно");
-          }
+          await checkAndReconnectToLobby(session.user.id);
         }
       } catch (error) {
         console.error("Auth check error:", error);
-        if (!ignore) {
-          toast.error("Ошибка при проверке авторизации");
-        }
+        toast.error("Ошибка при проверке авторизации");
       } finally {
-        if (!ignore) {
-          setIsAuthChecking(false);
-        }
+        setIsAuthChecking(false);
       }
     };
     
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (ignore) return;
-      
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       
       if (!session) {
@@ -79,7 +64,6 @@ const Index = () => {
     });
 
     return () => {
-      ignore = true;
       subscription.unsubscribe();
     };
   }, [checkAndReconnectToLobby, resetGameState, setIsAuthChecking]);
