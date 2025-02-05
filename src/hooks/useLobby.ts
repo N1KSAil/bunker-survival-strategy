@@ -39,11 +39,13 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
       setIsLoading(true);
       const { name, password } = lobbyCredentials;
 
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.user) {
         toast.error("Пожалуйста, войдите в систему");
         return;
       }
+
+      const userId = sessionData.session.user.id;
 
       if (isCreating) {
         const newPlayer = {
@@ -88,7 +90,7 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         const { error: joinError } = await supabase
           .from('lobby_participants')
           .insert({
-            user_id: session.user.id,
+            user_id: userId,
             lobby_name: name,
             lobby_password: password
           });
