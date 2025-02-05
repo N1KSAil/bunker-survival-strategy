@@ -91,12 +91,16 @@ const Index = () => {
   };
 
   if (isAuthChecking) {
-    return <LoadingScreen progress={progress} />;
+    return (
+      <MainContainer isAuthenticated={isAuthenticated}>
+        <LoadingScreen progress={progress} />
+      </MainContainer>
+    );
   }
 
   if (!isAuthenticated) {
     return (
-      <MainContainer>
+      <MainContainer isAuthenticated={isAuthenticated}>
         <h1 className="text-2xl font-bold mb-6 text-center">Добро пожаловать</h1>
         <AuthForm onSuccess={() => setIsAuthenticated(true)} />
       </MainContainer>
@@ -104,11 +108,15 @@ const Index = () => {
   }
 
   if (isLoading) {
-    return <LoadingScreen progress={progress} />;
+    return (
+      <MainContainer isAuthenticated={isAuthenticated}>
+        <LoadingScreen progress={progress} />
+      </MainContainer>
+    );
   }
 
   return (
-    <MainContainer>
+    <MainContainer isAuthenticated={isAuthenticated}>
       {!gameStarted ? (
         <StartScreen
           playerName={playerName}
