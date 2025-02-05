@@ -1,9 +1,13 @@
+
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
 import { useGameState } from "./useGameState";
 import { useLobbyManagement } from "./useLobbyManagement";
+import { useLobbyJoin } from "./useLobbyJoin";
+import { useLobbyCreate } from "./useLobbyCreate";
+import { useLobbyRealtime } from "./useLobbyRealtime";
 
 export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristics[]) => {
   const {
@@ -22,13 +26,16 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
 
   const {
     lobbies,
-    checkLobbyExists,
-    checkLobbyPassword,
-    createLobby,
     deleteLobby,
     deleteAllLobbies,
     loadLobbiesFromStorage
   } = useLobbyManagement();
+
+  const { handleJoinLobby } = useLobbyJoin();
+  const { handleCreateLobby } = useLobbyCreate();
+
+  // Подключаем реалтайм обновления
+  useLobbyRealtime(currentLobby?.name ?? null, initialPlayers, setPlayers);
 
   const getCurrentPlayerData = useCallback(() => {
     return players.find(player => player.name === playerName);
@@ -47,94 +54,19 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
 
       const userId = sessionData.session.user.id;
 
+      let result;
       if (isCreating) {
-        const newPlayer = {
-          ...initialPlayers[0],
-          name: playerName,
-          id: 1
-        };
-
-        // Create new lobby in Supabase
-        const { error: createError } = await supabase
-          .from('lobby_participants')
-          .insert({
-            user_id: userId,
-            lobby_name: name,
-            lobby_password: password
-          });
-
-        if (createError) {
-          console.error("Error creating lobby:", createError);
-          toast.error("Ошибка при создании лобби");
-          return;
-        }
-
-        setPlayers([newPlayer]);
+        result = await handleCreateLobby(name, password, userId, playerName, initialPlayers);
       } else {
-        // Check if lobby exists and verify password
-        const { data: lobbyData, error: lobbyError } = await supabase
-          .from('lobby_participants')
-          .select('lobby_password')
-          .eq('lobby_name', name)
-          .single();
-
-        if (lobbyError) {
-          console.error("Error checking lobby:", lobbyError);
-          toast.error("Лобби не существует");
-          return;
-        }
-
-        if (lobbyData.lobby_password !== password) {
-          toast.error("Неверный пароль");
-          return;
-        }
-
-        // Get existing players in the lobby
-        const { data: existingPlayers, error: playersError } = await supabase
-          .from('lobby_participants')
-          .select('user_id')
-          .eq('lobby_name', name);
-
-        if (playersError) {
-          console.error("Error fetching players:", playersError);
-          toast.error("Ошибка при получении списка игроков");
-          return;
-        }
-
-        const newPlayer = {
-          ...initialPlayers[existingPlayers.length],
-          name: playerName,
-          id: existingPlayers.length + 1
-        };
-
-        // Add new player to lobby
-        const { error: joinError } = await supabase
-          .from('lobby_participants')
-          .insert({
-            user_id: userId,
-            lobby_name: name,
-            lobby_password: password
-          });
-
-        if (joinError) {
-          console.error("Error joining lobby:", joinError);
-          toast.error("Ошибка при присоединении к лобби");
-          return;
-        }
-
-        const allPlayers = existingPlayers.map((p, index) => ({
-          ...initialPlayers[index],
-          id: index + 1,
-          name: p.user_id
-        }));
-        
-        allPlayers.push(newPlayer);
-        setPlayers(allPlayers);
+        result = await handleJoinLobby(name, password, userId, playerName, initialPlayers);
       }
 
-      setCurrentLobby(lobbyCredentials);
-      setGameStarted(true);
-      toast.success(isCreating ? "Лобби создано!" : "Вы присоединились к лобби!");
+      if (result) {
+        setPlayers(result.players);
+        setCurrentLobby(lobbyCredentials);
+        setGameStarted(true);
+        toast.success(isCreating ? "Лобби создано!" : "Вы присоединились к лобби!");
+      }
     } catch (error: any) {
       console.error("Game start error:", error);
       toast.error(error.message || "Ошибка при входе в лобби");
