@@ -1,6 +1,7 @@
 import ResourceTracker from "./ResourceTracker";
 import PlayerStatus from "./PlayerStatus";
 import GameTable from "./GameTable";
+import LobbyInfo from "./LobbyInfo";
 import { Button } from "./ui/button";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
 
@@ -45,8 +46,9 @@ const GameLayout = ({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <ResourceTracker />
+        <LobbyInfo lobby={currentLobby} playersCount={players.length} />
         <PlayerStatus playerData={getCurrentPlayerData()} />
       </div>
 
