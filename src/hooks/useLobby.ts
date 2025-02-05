@@ -53,37 +53,58 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
           name: playerName,
           id: 1
         };
-        await createLobby(name, password, newPlayer);
+
+        // Create new lobby in Supabase
+        const { error: createError } = await supabase
+          .from('lobby_participants')
+          .insert({
+            user_id: userId,
+            lobby_name: name,
+            lobby_password: password
+          });
+
+        if (createError) {
+          console.error("Error creating lobby:", createError);
+          toast.error("Ошибка при создании лобби");
+          return;
+        }
+
         setPlayers([newPlayer]);
       } else {
-        // Check if lobby exists in Supabase
+        // Check if lobby exists and verify password
         const { data: lobbyData, error: lobbyError } = await supabase
           .from('lobby_participants')
           .select('lobby_password')
           .eq('lobby_name', name)
           .single();
 
-        if (lobbyError || !lobbyData) {
+        if (lobbyError) {
+          console.error("Error checking lobby:", lobbyError);
           toast.error("Лобби не существует");
           return;
         }
 
-        // Check password
         if (lobbyData.lobby_password !== password) {
           toast.error("Неверный пароль");
           return;
         }
 
         // Get existing players in the lobby
-        const { data: existingPlayers } = await supabase
+        const { data: existingPlayers, error: playersError } = await supabase
           .from('lobby_participants')
-          .select('*')
+          .select('user_id')
           .eq('lobby_name', name);
 
+        if (playersError) {
+          console.error("Error fetching players:", playersError);
+          toast.error("Ошибка при получении списка игроков");
+          return;
+        }
+
         const newPlayer = {
-          ...initialPlayers[existingPlayers?.length || 0],
+          ...initialPlayers[existingPlayers.length],
           name: playerName,
-          id: (existingPlayers?.length || 0) + 1
+          id: existingPlayers.length + 1
         };
 
         // Add new player to lobby
@@ -101,11 +122,11 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
           return;
         }
 
-        const allPlayers = existingPlayers?.map((p, index) => ({
+        const allPlayers = existingPlayers.map((p, index) => ({
           ...initialPlayers[index],
           id: index + 1,
           name: p.user_id
-        })) || [];
+        }));
         
         allPlayers.push(newPlayer);
         setPlayers(allPlayers);
