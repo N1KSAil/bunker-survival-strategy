@@ -54,25 +54,59 @@ export const useLobby = (playerName: string, initialPlayers: PlayerCharacteristi
         await createLobby(name, password, newPlayer);
         setPlayers([newPlayer]);
       } else {
-        if (!checkLobbyExists(name)) {
+        // Check if lobby exists in Supabase
+        const { data: lobbyData, error: lobbyError } = await supabase
+          .from('lobby_participants')
+          .select('lobby_password')
+          .eq('lobby_name', name)
+          .single();
+
+        if (lobbyError || !lobbyData) {
           toast.error("Лобби не существует");
           return;
         }
-        if (!checkLobbyPassword(name, password)) {
+
+        // Check password
+        if (lobbyData.lobby_password !== password) {
           toast.error("Неверный пароль");
           return;
         }
 
-        const lobby = lobbies.get(name);
-        if (lobby) {
-          const newPlayer = {
-            ...initialPlayers[lobby.players.length],
-            name: playerName,
-            id: lobby.players.length + 1
-          };
-          lobby.players.push(newPlayer);
-          setPlayers(lobby.players);
+        // Get existing players in the lobby
+        const { data: existingPlayers } = await supabase
+          .from('lobby_participants')
+          .select('*')
+          .eq('lobby_name', name);
+
+        const newPlayer = {
+          ...initialPlayers[existingPlayers?.length || 0],
+          name: playerName,
+          id: (existingPlayers?.length || 0) + 1
+        };
+
+        // Add new player to lobby
+        const { error: joinError } = await supabase
+          .from('lobby_participants')
+          .insert({
+            user_id: session.user.id,
+            lobby_name: name,
+            lobby_password: password
+          });
+
+        if (joinError) {
+          console.error("Error joining lobby:", joinError);
+          toast.error("Ошибка при присоединении к лобби");
+          return;
         }
+
+        const allPlayers = existingPlayers?.map((p, index) => ({
+          ...initialPlayers[index],
+          id: index + 1,
+          name: p.user_id
+        })) || [];
+        
+        allPlayers.push(newPlayer);
+        setPlayers(allPlayers);
       }
 
       setCurrentLobby(lobbyCredentials);
