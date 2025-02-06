@@ -11,7 +11,34 @@ export const useLobbyCreate = () => {
     initialPlayers: PlayerCharacteristics[]
   ) => {
     try {
-      // First, check if lobby exists
+      // First, check if user is already in a lobby
+      const { data: existingParticipation, error: participationError } = await supabase
+        .from('lobby_participants')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (participationError) {
+        console.error("Error checking user participation:", participationError);
+        toast.error("Ошибка при проверке участия в лобби");
+        return null;
+      }
+
+      // If user is already in a lobby, remove them first
+      if (existingParticipation) {
+        const { error: deleteError } = await supabase
+          .from('lobby_participants')
+          .delete()
+          .eq('user_id', userId);
+
+        if (deleteError) {
+          console.error("Error removing from previous lobby:", deleteError);
+          toast.error("Ошибка при выходе из предыдущего лобби");
+          return null;
+        }
+      }
+
+      // Check if lobby exists
       const { data: existingLobby, error: checkError } = await supabase
         .from('lobby_participants')
         .select('lobby_name')
