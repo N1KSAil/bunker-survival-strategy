@@ -98,7 +98,7 @@ const GameLayout = ({
 
       <GameTable
         players={players}
-        currentPlayer={getCurrentPlayerData()}
+        currentPlayerName={playerName}
       />
     </div>
   );
