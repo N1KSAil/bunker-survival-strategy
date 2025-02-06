@@ -11,7 +11,7 @@ export const useLobbyCreate = () => {
     initialPlayers: PlayerCharacteristics[]
   ) => {
     try {
-      // Проверяем существование лобби
+      // First, check if lobby exists
       const { data: existingLobby, error: checkError } = await supabase
         .from('lobby_participants')
         .select('lobby_name')
@@ -19,7 +19,7 @@ export const useLobbyCreate = () => {
         .maybeSingle();
 
       if (checkError) {
-        console.error("Ошибка при проверке лобби:", checkError);
+        console.error("Error checking lobby existence:", checkError);
         toast.error("Ошибка при проверке существования лобби");
         return null;
       }
@@ -29,29 +29,32 @@ export const useLobbyCreate = () => {
         return null;
       }
 
+      // Create the lobby by inserting the first participant (creator)
+      const { error: createError } = await supabase
+        .from('lobby_participants')
+        .insert({
+          user_id: userId,
+          lobby_name: name,
+          lobby_password: password,
+        });
+
+      if (createError) {
+        console.error("Error creating lobby:", createError);
+        toast.error("Ошибка при создании лобби");
+        return null;
+      }
+
+      // After successful creation, prepare player data
       const newPlayer = {
         ...initialPlayers[0],
         name: playerName,
         id: 1
       };
 
-      const { error: createError } = await supabase
-        .from('lobby_participants')
-        .insert({
-          user_id: userId,
-          lobby_name: name,
-          lobby_password: password
-        });
-
-      if (createError) {
-        console.error("Ошибка при создании лобби:", createError);
-        toast.error("Ошибка при создании лобби");
-        return null;
-      }
-
+      toast.success("Лобби успешно создано!");
       return { players: [newPlayer], newPlayer };
     } catch (error) {
-      console.error("Неожиданная ошибка:", error);
+      console.error("Unexpected error:", error);
       toast.error("Произошла неожиданная ошибка");
       return null;
     }
