@@ -1,13 +1,16 @@
 import { LobbyCredentials } from "@/types/game";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
+import ReconnectButton from "./ReconnectButton";
 
 interface LobbyInfoProps {
   lobby: LobbyCredentials | null;
   playersCount: number;
+  isDisconnected?: boolean;
+  onReconnect?: (lobby: LobbyCredentials) => void;
 }
 
-const LobbyInfo = ({ lobby, playersCount }: LobbyInfoProps) => {
+const LobbyInfo = ({ lobby, playersCount, isDisconnected, onReconnect }: LobbyInfoProps) => {
   if (!lobby) return null;
 
   return (
@@ -27,6 +30,11 @@ const LobbyInfo = ({ lobby, playersCount }: LobbyInfoProps) => {
         <div>
           <span className="font-semibold">Код доступа:</span> {lobby.password}
         </div>
+        {isDisconnected && onReconnect && (
+          <div className="pt-2">
+            <ReconnectButton lobby={lobby} onReconnect={onReconnect} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

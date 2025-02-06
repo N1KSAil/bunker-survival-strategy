@@ -1,5 +1,4 @@
-
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PlayerCharacteristics } from "@/types/game";
 import { toast } from "sonner";
@@ -9,6 +8,8 @@ export const useLobbyRealtime = (
   initialPlayers: PlayerCharacteristics[],
   setPlayers: (players: PlayerCharacteristics[]) => void
 ) => {
+  const [isDisconnected, setIsDisconnected] = useState(false);
+
   useEffect(() => {
     if (!lobbyName) return;
 
@@ -33,6 +34,7 @@ export const useLobbyRealtime = (
 
           if (error) {
             console.error('Ошибка при получении участников:', error);
+            setIsDisconnected(true);
             return;
           }
 
@@ -43,6 +45,7 @@ export const useLobbyRealtime = (
           }));
 
           setPlayers(updatedPlayers);
+          setIsDisconnected(false);
 
           if (payload.eventType === 'INSERT') {
             toast.success(`Игрок ${payload.new.user_id} присоединился к лобби!`);
@@ -51,10 +54,18 @@ export const useLobbyRealtime = (
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsDisconnected(false);
+        } else {
+          setIsDisconnected(true);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [lobbyName, initialPlayers, setPlayers]);
+
+  return { isDisconnected };
 };
