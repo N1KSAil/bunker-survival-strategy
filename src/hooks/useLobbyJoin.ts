@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PlayerCharacteristics, LobbyCredentials } from "@/types/game";
@@ -11,23 +10,31 @@ export const useLobbyJoin = () => {
     playerName: string,
     initialPlayers: PlayerCharacteristics[]
   ) => {
-    const { data: lobbyData, error: lobbyError } = await supabase
+    // Сначала проверяем существование лобби
+    const { data: existingLobby, error: checkError } = await supabase
       .from('lobby_participants')
-      .select('lobby_password')
+      .select('*')
       .eq('lobby_name', name)
-      .single();
+      .maybeSingle();
 
-    if (lobbyError) {
-      console.error("Error checking lobby:", lobbyError);
+    if (checkError) {
+      console.error("Error checking lobby:", checkError);
+      toast.error("Ошибка при проверке лобби");
+      return null;
+    }
+
+    if (!existingLobby) {
       toast.error("Лобби не существует");
       return null;
     }
 
-    if (lobbyData.lobby_password !== password) {
+    // Проверяем пароль
+    if (existingLobby.lobby_password !== password) {
       toast.error("Неверный пароль");
       return null;
     }
 
+    // Получаем список всех игроков в лобби
     const { data: existingPlayers, error: playersError } = await supabase
       .from('lobby_participants')
       .select('user_id')
@@ -45,6 +52,7 @@ export const useLobbyJoin = () => {
       id: existingPlayers.length + 1
     };
 
+    // Добавляем нового игрока в лобби
     const { error: joinError } = await supabase
       .from('lobby_participants')
       .insert({
