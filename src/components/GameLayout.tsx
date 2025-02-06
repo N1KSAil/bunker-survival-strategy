@@ -28,7 +28,7 @@ const GameLayout = ({
   onReconnect
 }: GameLayoutProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const { isDisconnected } = useLobbyRealtime(currentLobby?.name ?? null, [], () => {});
+  const { isDisconnected } = useLobbyRealtime(currentLobby?.name ?? null, players, () => {});
 
   const handleDeleteLobby = async () => {
     if (!currentLobby) return;
@@ -62,6 +62,7 @@ const GameLayout = ({
           <LobbyInfo 
             lobby={currentLobby} 
             playersCount={players.length} 
+            players={players}
             isDisconnected={isDisconnected}
             onReconnect={onReconnect}
           />
