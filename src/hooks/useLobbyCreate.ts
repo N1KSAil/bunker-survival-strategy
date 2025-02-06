@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { PlayerCharacteristics } from "@/types/game";
+import { toast } from "sonner";
 
 export const useLobbyCreate = () => {
   const handleCreateLobby = async (
@@ -44,11 +44,24 @@ export const useLobbyCreate = () => {
         return null;
       }
 
-      // After successful creation, prepare player data
-      const newPlayer = {
+      // After successful creation, prepare player data with all characteristics
+      const newPlayer: PlayerCharacteristics = {
         ...initialPlayers[0],
+        id: 1,
         name: playerName,
-        id: 1
+        profession: initialPlayers[0].profession,
+        professionExperience: initialPlayers[0].professionExperience,
+        gender: initialPlayers[0].gender,
+        health: initialPlayers[0].health,
+        hobby: initialPlayers[0].hobby,
+        hobbyExperience: initialPlayers[0].hobbyExperience,
+        phobia: initialPlayers[0].phobia,
+        bagItem: initialPlayers[0].bagItem,
+        specialAbility: initialPlayers[0].specialAbility,
+        additionalTraits: initialPlayers[0].additionalTraits,
+        onlineStatus: true,
+        age: initialPlayers[0].age,
+        education: initialPlayers[0].education
       };
 
       toast.success("Лобби успешно создано!");
